@@ -1,0 +1,29 @@
+---
+title: "prepare models"
+author: "SPT"
+date: "2021_08_16"
+output: github_document
+---
+
+### Step 1: Load packages and data
+
+```{r, echo = `FALSE`}
+# Load packages
+library(tidyverse)
+
+# Reset global environment
+rm(list = ls())
+
+# Change working directory
+setwd("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis")
+
+# Load data
+#df.historical <- read.csv(file = "processed/df_historical.csv", head = TRUE, sep = ",")
+#df.future     <- read.csv(file = "processed/df_future.csv", head = TRUE, sep = ",")
+```
+
+### Step 2: Format data
+
+```{r echo = `FALSE`}
+
+```
