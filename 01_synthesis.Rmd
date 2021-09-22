@@ -7,14 +7,15 @@ output: github_document
 
 ### Step 1: Load packages and data
 
-New and improved. Use `add.rows` function to add multiple effect sizes to the same study. The database is organized chronologically and new rows are added to the end of the database, such that row id's retain their meaning throughout. If you find this, I hope you enjoy it.
+New and improved. Use `add.rows` function to add multiple effect sizes to the same study.
+The database is organized chronologically and new rows are added to the end of the database,
+such that row id's retain their meaning throughout. If you find this, I hope you enjoy it.
 
 # Progress
 
 Line 220 ish
 # Reorganize variables (present and absent for below)
 # Rename factors for competition and no competition
-
 
 ```{r, echo = `FALSE`}
 # Install packages
@@ -26,6 +27,7 @@ library(tidyverse)
 library(meta)
 library(metafor)
 library(esc)
+library(gdata)
 #library(dmetar)
 
  # Reset global environment
@@ -40,7 +42,9 @@ wos.2 <- read.csv(file = "data/WoS/savedrecs-2.csv", head = TRUE, sep = ",")
 wos.3 <- read.csv(file = "data/WoS/savedrecs-3.csv", head = TRUE, sep = ",")
 wos.4 <- read.csv(file = "data/WoS/savedrecs-4.csv", head = TRUE, sep = ",")
 wos.5 <- read.csv(file = "data/WoS/savedrecs-5.csv", head = TRUE, sep = ",")
+```
 
+```{r, echo = `FALSE`}
 # Function to insert rows for papers with multiple effect sizes
 add.rows <- function(data, newrow, r) {
   data[seq(r + 1, nrow(data) + 1),] <- data[seq(r, nrow(data)),]
@@ -48,15 +52,58 @@ add.rows <- function(data, newrow, r) {
   data
 }
 
-# Basic theme
+# Plot theme
 pretty <- theme_classic(base_size = 10) +
-  theme(axis.title.y      = element_text(margin = margin(r = 20)),
-        axis.title.x      = element_text(margin = margin(t = 20)), 
+  theme(axis.title.y      = element_text(margin = margin(r = 10)),
+        axis.title.x      = element_text(margin = margin(t = 10)), 
         axis.text         = element_text(color = "black"), 
         axis.ticks        = element_line(color = "black"),
         axis.ticks.length = unit(.25, "cm"), 
         legend.key.size   = unit(1.5,  'lines'),
         legend.position   = "right")
+
+# Function to calculate effect sizes
+compile.ma <- function(data, article.id, es.id,
+                       values.1, values.2,
+                       details.1, details.2) {
+  # Add details for first treatment
+  data <- add.rows(data, c(data[article.id, 1:7],
+                   details.1[1:14],
+                   length(as.numeric(values.1)),
+                   mean(as.numeric(values.1)),
+                   sd(as.numeric(values.1)),
+                   es.id, NA, NA, NA, NA, NA, NA),
+                   sum(nrow(data)) + 1)
+  # Remove empty row that, annoyingly, is added
+  data <- data[-c(as.numeric(sum(nrow(data)))), ]
+  # Add details for second treatment
+  data <- add.rows(data, c(data[article.id, 1:7],
+                   details.2[1:14],
+                   length(as.numeric(values.2)),
+                   mean(as.numeric(values.2)),
+                   sd(as.numeric(values.2)),
+                   es.id, NA, NA, NA, NA, NA, NA),
+                   sum(nrow(data)) + 1)
+  # Remove empty row that, annoyingly, is added
+  data <- data[-c(as.numeric(sum(nrow(data)))), ]
+  # Save row numbers
+  r1 <- (as.numeric(sum(nrow(data))) - 1)
+  r2 <- (as.numeric(sum(nrow(data))))
+  # Calculate effect size (d)
+  es <- esc_mean_sd(grp1m  = as.numeric(data[c(r2), c("mean")]),
+                    grp1sd = as.numeric(data[c(r2), c("sd")]),
+                    grp1n  = as.numeric(data[c(r2), c("n")]),
+                    grp2m  = as.numeric(data[c(r1), c("mean")]),
+                    grp2sd = as.numeric(data[c(r1), c("sd")]),
+                    grp2n  = as.numeric(data[c(r1), c("n")]),
+                    study  = es.id)
+  # Calculate effect sizes
+  data[c(r2, r1), 26:31] <- c(as.numeric(es$es),    as.numeric(es$se),
+                              as.numeric(es$var),   as.numeric(es$ci.lo),
+                              as.numeric(es$ci.hi), as.numeric(es$w))
+  # Choose output
+  return(data)
+  }
 ```
 
 ### Step 2: Format data
@@ -76,6 +123,7 @@ wos <- wos.1 %>%
   mutate_all(na_if,"") %>%
   mutate(include       = as.character(NA),
          comment       = as.character(NA),
+         source        = as.character(NA),
          focal_species = as.character(NA),
          focal_n       = as.character(NA),
          comp_species  = as.character(NA),
@@ -87,20 +135,20 @@ wos <- wos.1 %>%
          location      = as.character(NA),
          lat           = as.character(NA),
          long          = as.character(NA),
-         n             = as.character(NA),
-         mean          = as.character(NA),
-         sd            = as.character(NA),
+         n             = as.numeric(as.character(NA)),
+         mean          = as.numeric(as.character(NA)),
+         sd            = as.numeric(as.character(NA)),
          id            = row_number(),
-         es.id         = as.character(NA),
-         es            = as.character(NA),
-         es.se         = as.character(NA),
-         es.v          = as.character(NA),
-         es.ci.upper   = as.character(NA),
-         es.ci.lower   = as.character(NA),
-         es.weight     = as.character(NA)) %>%
+         es.id         = as.numeric(as.character(NA)),
+         es            = as.numeric(as.character(NA)),
+         es.se         = as.numeric(as.character(NA)),
+         es.v          = as.numeric(as.character(NA)),
+         es.ci.upper   = as.numeric(as.character(NA)),
+         es.ci.lower   = as.numeric(as.character(NA)),
+         es.weight     = as.numeric(as.character(NA))) %>%
   dplyr::select(., c(id, year, title, authors,
                      journal, book, abstract,
-                     include, comment,
+                     include, comment, source,
                      focal_species, focal_n,
                      comp_species, comp_n,
                      pred_species, pred_n,
@@ -112,8 +160,8 @@ wos <- wos.1 %>%
                      es.weight))
 
 # Remove objects
-#rm(wos.1, wos.2, wos.3,
-#   wos.4, wos.5)
+rm(wos.1, wos.2, wos.3,
+   wos.4, wos.5)
 ```
 
 ### Step 2: Enter data for each article and calculate effect size
@@ -136,79 +184,409 @@ wos[2, 8:9] <- c(
   "theory")
 ```
 
-```{r, 3, echo = `FALSE`}
-### Article 3
-# Table 1
+```{r, 3_1, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 150,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
 
-# Effect size id
-id <- "3_1"
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 150,
+  # comp_species, n
+  "Rana pipiens", 150,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
 
-# Rana sylvatica, no competition
-wos[3, 8:30] <- c(# include, comment
-                  "Y", "field",
-                  # focal_species, n
-                  "Rana sylvatica", 150,
-                  # comp_species, n
-                  "None", 0,
-                  # pred_species, n
-                  "None", 0,
-                  # type, interaction
-                  "no_comp", "survivorship",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA, NA,
-                  # n, mean, sd
-                  2, mean(c(8.6, 22.1)), sd(c(8.6, 22.1)),
-                  # effect size id
-                  id,
-                  # NA
-                  NA, NA, NA, NA, NA, NA)
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_1",
+                  values.1   = c(8.6, 22.1),
+                  values.2   = c(1.4, 27.6, 4.31),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
 
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include, comment
-                  "Y", "field",
-                  # focal_species, n,
-                  "Rana sylvatica", 150,
-                  # comp_species, n
-                  "Rana pipiens", 150,
-                  # pred_species, n
-                  "None", 0,
-                  # type, interaction
-                  "comp", "survivorship",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat, long
-                  NA, NA,
-                  # n, mean, sd
-                  3, mean(c(1.4, 27.6, 4.3)), sd(c(1.4, 27.6, 4.3)),
-                  # effect size id
-                  id,
-                  # NA
-                  NA, NA, NA, NA, NA, NA),
-                # Add to end
-                sum(nrow(wos)) + 1) %>%
-  filter(!is.na(.$id))
+```{r, 3_2, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 300,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
 
-# Save rows
-r1  <- 3
-r2 <- nrow(wos)
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 300,
+  # comp_species, n
+  "Rana pipiens", 300,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
 
-# Calculate effect size (d)
-es.3.1 <- esc_mean_sd(grp1m  = as.numeric(wos[c(r2),  c("mean")]),
-                      grp1sd = as.numeric(wos[c(r2),  c("sd")]),
-                      grp1n  = as.numeric(wos[c(r2),  c("n")]),
-                      grp2m  = as.numeric(wos[c(r1), c("mean")]),
-                      grp2sd = as.numeric(wos[c(r1), c("sd")]),
-                      grp2n  = as.numeric(wos[c(r1), c("n")]),
-                      study  = id)
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_2",
+                  values.1   = c(4.0, 29.6, 1.0),
+                  values.2   = c(7.3, 25.6),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
 
-# Add effect size to main df
-wos[c(r2, r1), 25:30] <- c(as.numeric(es.3.1$es),    as.numeric(es.3.1$se),
-                           as.numeric(es.3.1$var),   as.numeric(es.3.1$ci.lo),
-                           as.numeric(es.3.1$ci.hi), as.numeric(es.3.1$w))
+```{r, 3_3, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 600,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 600,
+  # comp_species, n
+  "Rana pipiens", 600,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_3",
+                  values.1   = c(16.2, 21.0, 5.2),
+                  values.2   = c(12.6, 17.0),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_4, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 1200,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 1200,
+  # comp_species, n
+  "Rana pipiens", 1200,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_4",
+                  values.1   = c(17.7, 14.3, 0.5),
+                  values.2   = c(9.1, 21.6),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_5, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 150,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 150,
+  # comp_species, n
+  "Rana pipiens", 150,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_5",
+                  values.1   = c(6.8, 6.4, 2.8),
+                  values.2   = c(9.5, 30.5),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_6, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 300,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 300,
+  # comp_species, n
+  "Rana pipiens", 300,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_6",
+                  values.1   = c(4.7, 32.6, 0.3),
+                  values.2   = c(9.2, 23.6),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_7, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 600,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 600,
+  # comp_species, n
+  "Rana pipiens", 600,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_7",
+                  values.1   = c(3.7, 23.3, 1.2),
+                  values.2   = c(10.3, 15.0),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_8, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 1200,
+  # comp_species, n
+  "None", 0,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "no_comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 1",
+  # focal_species, n,
+  "Rana sylvatica", 1200,
+  # comp_species, n
+  "Rana pipiens", 1200,
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_8",
+                  values.1   = c(8.8, 11.6, 0.4),
+                  values.2   = c(4.8, 7.1),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
+```
+
+```{r, 3_9, echo = `FALSE`}
+# First treatment
+details.1 <- c(
+  # include, comment, source
+  "Y", "field", "Table 4, natural",
+  # focal_species, n,
+  "Rana pipiens", "High density",
+  # comp_species, n
+  "Rana sylvatica", "High density",
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Second treatment
+details.2 <- c(
+  # include, comment, source
+  "Y", "field", "Table 4, natural",
+  # focal_species, n,
+  "Rana pipiens", "High density",
+  # comp_species, n
+  "Rana sylvatica", "High density",
+  # pred_species, n
+  "None", 0,
+  # type, interaction
+  "comp+pred", "survivorship",
+  # location
+  "University of Michigan, ES George Reserve, Pinckney",
+  # lat, long
+  NA, NA)
+
+# Calculate effect sizes
+wos <- compile.ma(data       = wos,
+                  article.id = "3",
+                  es.id      = "3_9",
+                  values.1   = c(1.4, 2.3),
+                  values.2   = c(6.4, 0.4),
+                  details.1  = details.1[1:14],
+                  details.2  = details.2[1:14])
 ```
 
 ### Step 3: Quick plots
@@ -218,25 +596,32 @@ wos[c(r2, r1), 25:30] <- c(as.numeric(es.3.1$es),    as.numeric(es.3.1$se),
 current <- wos %>%
   filter(!is.na(include)) %>%
   filter(include == "Y") %>%
-  mutate(es          = as.numeric(es),
-         es.se       = as.numeric(es.se),
-         es.v        = as.numeric(es.v),
-         es.ci.upper = as.numeric(es.ci.upper),
-         es.ci.lower = as.numeric(es.ci.lower),
-         es.weight   = as.numeric(es.weight))
+  mutate(
+    # Data
+    type        = as.factor(type),
+    interaction = as.factor(interaction),
+    # Effect sizes
+    es          = as.numeric(es),
+    es.se       = as.numeric(es.se),
+    es.v        = as.numeric(es.v),
+    es.ci.upper = as.numeric(es.ci.upper),
+    es.ci.lower = as.numeric(es.ci.lower),
+    es.weight   = as.numeric(es.weight)) %>%
+  filter(type == "comp" | type == "no_comp")
 
-# Reorganize variables (present and absent for below)
-# Rename factors for competition and no competition
+# Rename factors (filtered to comp only)
+levels(current$type) <- list(Present  = "comp",
+                             Absent   = "no_comp")
 
-# Test plot
+# Quick plot
 ggplot() +
   geom_point(current, mapping = aes(x = es,
                                     y = type,
                                     color = type),
-             size = 2) +
+             size = 2, alpha = 0.5) +
   #geom_errorbar(current, mapping = aes(xmin = (es - es.se),
   #                                     xmax = (es + es.se),
-  #                                     y    = include),
+  #                                     y    = type),
   #              width = 0.1) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Effect size (d)",
@@ -244,793 +629,7 @@ ggplot() +
        color = "Interspecific\ncompetition") +
   scale_color_manual(values = c("blue", "red"),
                      labels = c("Present", "Absent")) +
-  scale_x_continuous(limits = c(-1, 1)) +
+  scale_x_continuous(limits = c(-2, 2)) +
   pretty
-
-# Test plot
-ggplot() +
-  geom_point(as.data.frame(es.3.1),
-             mapping = aes(x = es,
-                           y = study), size = 2) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Effect size (d)",
-       y = "Interspecific competition",
-       color = "Study") +
-  scale_color_manual(values = c("blue", "red"),
-                     labels = c("Present", "Absent")) +
-  scale_x_continuous(limits = c(-1, 1)) +
-  pretty
-
-
-
-## Filter control group
-#control <- current %>%
-#  filter(type == "control") %>%
-#  arrange(focal_species, focal_n)
-#
-## Filter competition group
-#comp <- current %>%
-#  filter(type == "competition") %>%
-#  arrange(focal_species, focal_n)
-#
-## Filter predation group
-#pred <- current %>%
-#  filter(type == "predation") %>%
-#  arrange(focal_species, focal_n)
-#
-## Filter comp/pred group
-#comp.pred <- current %>%
-#  filter(type == "comp+pred") %>%
-#  arrange(focal_species, focal_n)
-
-
-
-
-## Calculate values we need for the formulas
-#s1 <- sd(x1)
-#s2 <- sd(x2)
-#n1 <- 20
-#
-## Calculate s_pooled
-#s_pooled <- sqrt(
-#  (((n1-1)*s1^2) + ((n2-1)*s2^2))/
-#    ((n1-1)+(n2-1))
-#)
-## Calculate the standard error
-#se <- s_pooled*sqrt((1/n1)+(1/n2))
-#se
-
 ```
 
-### Step 4: Notes
-```{r, echo = `FALSE`}
-
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  300,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(4.0, 29.6, 1.0)),
-                  # sd
-                  sd(c(4.0, 29.6, 1.0))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  600,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(16.2, 21.0, 5.2)),
-                  # sd
-                  sd(c(16.2, 21.0, 5.2))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  1200,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(17.7, 15.3, 0.5)),
-                  # sd
-                  sd(c(17.7, 15.3, 0.5))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-################################################
-# Rana sylvatica, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  150,
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  150,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(1.4, 27.6, 4.3)),
-                  # sd
-                  sd(c(1.4, 27.6, 4.3))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  300,
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  300,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(7.3, 25.6)),
-                  # sd
-                  sd(c(7.3, 25.6))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  600,
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  600,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(12.6, 17.0)),
-                  # sd
-                  sd(c(12.6, 17.0))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  1200,
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  1200,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(9.1, 21.6)),
-                  # sd
-                  sd(c(9.1, 21.6))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-################################################
-# Rana pipiens, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  150,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(6.8, 6.4, 2.8)),
-                  # sd
-                  sd(c(6.8, 6.4, 2.8))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  300,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(4.7, 32.6, 0.3)),
-                  # sd
-                  sd(c(4.7, 32.6, 0.3))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  600,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(3.7, 23.3, 1.2)),
-                  # sd
-                  sd(c(3.7, 23.3, 1.2))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  1200,
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  3,
-                  # mean,
-                  mean(c(8.8, 11.6, 0.4)),
-                  # sd
-                  sd(c(8.8, 11.6, 0.4))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-################################################
-# Rana pipiens, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  150,
-                  # comp_species
-                  "Rana sylvatica",
-                  # comp_n
-                  150,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(9.5, 30.5)),
-                  # sd
-                  sd(c(9.5, 30.5))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  300,
-                  # comp_species
-                  "Rana sylvatica",
-                  # comp_n
-                  300,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(9.2, 23.6)),
-                  # sd
-                  sd(c(9.2, 23.6))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  600,
-                  # comp_species
-                  "Rana sylvatica",
-                  # comp_n
-                  600,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(10.3, 15.0)),
-                  # sd
-                  sd(c(10.3, 15.0))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana pipiens, competition
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field",
-                  # focal_species
-                  "Rana pipiens",
-                  # focal_n
-                  1200,
-                  # comp_species
-                  "Rana sylvatica",
-                  # comp_n
-                  1200,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "competition",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(4.8, 7.1)),
-                  # sd
-                  sd(c(4.8, 7.1))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-################################################
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field, open",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  "High density",
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(25.7, 32.4)),
-                  # sd
-                  sd(c(25.7, 32.4))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, control
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field, open",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  "Low density",
-                  # comp_species
-                  "None",
-                  # comp_n
-                  0,
-                  # pred_species
-                  "None",
-                  # pred_n
-                  0,
-                  # interaction
-                  "survivorship",
-                  # type
-                  "control",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(29.0, 35.2)),
-                  # sd
-                  sd(c(29.0, 35.2))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-################################################
-# Rana sylvatica, competition+predation
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field, open",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  "High density",
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  "High density",
-                  # pred_species
-                  "Macroinvertebrates",
-                  # pred_n
-                  "Unknown",
-                  # interaction
-                  "survivorship",
-                  # type
-                  "comp+pred",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(1.4, 2.3)),
-                  # sd
-                  sd(c(1.4, 2.3))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-# Rana sylvatica, competition+predation
-wos <- add.rows(wos,
-                c(wos[3, 1:7],
-                  # include
-                  "Y",
-                  # comment
-                  "field, open",
-                  # focal_species
-                  "Rana sylvatica",
-                  # focal_n
-                  "Low density",
-                  # comp_species
-                  "Rana pipiens",
-                  # comp_n
-                  "Low density",
-                  # pred_species
-                  "Macroinvertebrates",
-                  # pred_n
-                  "Unknown",
-                  # interaction
-                  "survivorship",
-                  # type
-                  "comp+pred",
-                  # location
-                  "University of Michigan, ES George Reserve, Pinckney",
-                  # lat
-                  NA,
-                  # long
-                  NA,
-                  # n
-                  2,
-                  # mean,
-                  mean(c(2.6, 0.6)),
-                  # sd
-                  sd(c(2.6, 0.6))),
-                # Add to end
-                sum(nrow(wos) + 1))
-
-
-```
