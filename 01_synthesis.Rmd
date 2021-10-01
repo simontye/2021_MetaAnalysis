@@ -1,11 +1,11 @@
 ---
 title: "synthesis"
 author: "SPT"
-date: "2021_10_23"
+date: "2021_10_01"
 output: github_document
 ---
 
-### Step 1: Load packages \and data
+### Step 1: Load packages and data
 
 ```{r, echo = `FALSE`}
 # Install packages
@@ -28,11 +28,10 @@ rm(list = ls())
 setwd("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis")
 
 # Load Web of Science data (WoS)
-wos.1 <- read.csv(file = "data/WoS/savedrecs.csv",  head = TRUE, sep = ",")
-wos.2 <- read.csv(file = "data/WoS/savedrecs-2.csv", head = TRUE, sep = ",")
-wos.3 <- read.csv(file = "data/WoS/savedrecs-3.csv", head = TRUE, sep = ",")
-wos.4 <- read.csv(file = "data/WoS/savedrecs-4.csv", head = TRUE, sep = ",")
-wos.5 <- read.csv(file = "data/WoS/savedrecs-5.csv", head = TRUE, sep = ",")
+wos.comp <- read.csv(file = "data/papers/wos_comp.csv",  head = TRUE, sep = ",")
+wos.pred <- read.csv(file = "data/papers/wos_pred.csv", head = TRUE, sep = ",")
+wos.mut  <- read.csv(file = "data/papers/wos_mutual.csv", head = TRUE, sep = ",")
+chamber  <- read.csv(file = "data/papers/chamberlain.csv", head = TRUE, sep = ",")
 ```
 
 ```{r, echo = `FALSE`}
@@ -61,7 +60,7 @@ ma.es <- function(input,
                   output,
                   article.id,
                   study.data) {
-  if(study.data[12] == "Mean" && study.data[13] == "-") {
+  if(study.data["measure"] == "Mean" && study.data["direction"] == "-") {
   study.es <- esc_mean_sd(grp1m  = as.numeric(study.data[c("mean.e")]),
                           grp1sd = as.numeric(study.data[c("error.e")]),
                           grp1n  = as.numeric(study.data[c("n.e")]),
@@ -69,7 +68,7 @@ ma.es <- function(input,
                           grp2sd = as.numeric(study.data[c("error.c")]),
                           grp2n  = as.numeric(study.data[c("n.c")]))    
   } 
-  if(study.data[12] == "Mean" && study.data[13] == "+") {
+  if(study.data["measure"] == "Mean" && study.data["direction"] == "+") {
   study.es <- esc_mean_sd(grp1m  = as.numeric(study.data[c("mean.c")]),
                           grp1sd = as.numeric(study.data[c("error.c")]),
                           grp1n  = as.numeric(study.data[c("n.c")]),
@@ -77,7 +76,7 @@ ma.es <- function(input,
                           grp2sd = as.numeric(study.data[c("error.e")]),
                           grp2n  = as.numeric(study.data[c("n.e")]))
   }
-  if(study.data[12] != "Mean") {
+  if(study.data["measure"] != "Mean") {
   study.es <- data.frame(es    = NA,
                          se    = NA,
                          var   = NA,
@@ -86,8 +85,8 @@ ma.es <- function(input,
                          w     = NA)
   }
   # Add study details
-  output <- add.rows(output, c(input[article.id, 1:7], "Y",
-                               study.data[1:21],
+  output <- add.rows(output, c(input[article.id, 1:8],
+                               study.data[1:27],
                                as.numeric(study.es$es),
                                as.numeric(study.es$se),
                                as.numeric(study.es$var),
@@ -131,18 +130,26 @@ ma.status <- function(wos, es) {
   percent <- round((eval / articles * 100), 2)
   
   # Create output
-  paper.count   <- paste0("1. Completed ", percent, "% (", eval, "/4533) of paper evaluations.")
-  good.count    <- paste0("2. Found ", good, " papers that are probably useful.")
-  bad.count     <- paste0("3. Found ", bad, " papers that are not useful.")
-  es.count      <- paste0("4. Calculated ", es, " effect size(s).")
-  encouragement <- paste0("5. God's dead, nature's dying, capitalism's thriving, but be kind.")
+  paper.count   <- paste0("1. Completed ", percent, "% (", eval, "/699) of article evaluations.")
+  good.count    <- paste0("2. Found ", good, " articles that may have relevant information.")
+  bad.count     <- paste0("3. Found ", bad, " articles that do not have relevant information.")
+  #es.count      <- paste0("4. Calculated ", es, " effect size(s).")
   # Choose output
   return(cat(paper.count,
              good.count,
              bad.count,
-             es.count,
-             encouragement,
+             #es.count,
              sep = "\n"))
+}
+
+# Function to print or search abstract
+ma.abstract <- function(wos, article.id) {
+  # Print or search for abstract
+  article <- ifelse(is.na(wos[article.id, "abstract"]),
+                    ma.search(wos, article.id),
+                    wos[article.id, "abstract"])
+  # Choose output
+  return(article)
 }
 
 # Plot theme
@@ -160,8 +167,8 @@ pretty <- theme_classic(base_size = 10) +
 
 ```{r echo = `FALSE`}
 # Combine WoS data
-wos <- wos.1 %>%
-  rbind(., wos.2, wos.3, wos.4, wos.5) %>%
+wos <- wos.comp %>%
+  rbind(., wos.pred, wos.mut) %>%
   rename_all(tolower) %>%
   dplyr::select(., c(publication.year, article.title, authors,
                      source.title, book.series.title, abstract)) %>%
@@ -171,465 +178,441 @@ wos <- wos.1 %>%
                 year    = publication.year) %>%
   arrange(year, title) %>%
   mutate_all(na_if,"") %>%
-  mutate(id            = row_number(),
-         include       = as.character(NA),
-         comment       = as.character(NA)) %>%
+  mutate(id      = row_number(),
+         include = as.character(NA),
+         comment = as.character(NA)) %>%
+  dplyr::select(., c(id, year, title, authors,
+                     journal, book, abstract,
+                     include, comment))
+
+# Format Chamberlain data
+chamber <- chamber %>%
+  rename_all(tolower) %>%
+  dplyr::rename(year     = publication.year,
+                authors  = author,
+                journal  = publication.title,
+                abstract = abstract.note) %>%
+  dplyr::select(., c(year, title, authors, journal, abstract)) %>%
+  mutate_all(na_if,"") %>%
+  mutate(id      = row_number(),
+         book    = as.character(NA),
+         include = "yes",
+         comment = as.character(NA)) %>%
   dplyr::select(., c(id, year, title, authors,
                      journal, book, abstract,
                      include, comment))
 
 # Create empty df to store effect sizes
-es <- data.frame(id            = as.character(NA),
-                 year          = as.character(NA),
-                 title         = as.character(NA),
-                 authors       = as.character(NA),
-                 journal       = as.character(NA),
-                 book          = as.character(NA),
-                 abstract      = as.character(NA),
-                 include       = as.character(NA),
-                 es.id         = as.character(NA),
-                 comment       = as.character(NA),
-                 focal.species = as.character(NA),
-                 focal.n       = as.character(NA),
-                 focal.density = as.character(NA),
-                 focal.size    = as.character(NA),
-                 comp.species  = as.character(NA), 
-                 comp.n        = as.character(NA),
-                 comp.density  = as.character(NA),
-                 comp.size     = as.character(NA),
-                 pred.species  = as.character(NA), 
-                 pred.n        = as.character(NA),  
-                 pred.density  = as.character(NA),
-                 pred.size     = as.character(NA),
-                 interaction   = as.character(NA),   
-                 trait         = as.character(NA),         
-                 location      = as.character(NA),      
-                 measure       = as.character(NA),       
-                 direction     = as.character(NA),     
-                 n.c           = as.character(NA),           
-                 mean.c        = as.character(NA),        
-                 error.c       = as.character(NA),       
-                 error.type.c  = as.character(NA),  
-                 n.e           = as.character(NA),           
-                 mean.e        = as.character(NA),        
-                 error.e       = as.character(NA),       
-                 error.type.e  = as.character(NA),
-                 es            = as.character(NA),
-                 es.se         = as.character(NA),
-                 es.var        = as.character(NA),
-                 es.ci.upper   = as.character(NA),
-                 es.ci.lower   = as.character(NA),
-                 es.w          = as.character(NA))
+details <- data.frame(id            = as.character(NA),
+                      year          = as.character(NA),
+                      title         = as.character(NA),
+                      authors       = as.character(NA),
+                      journal       = as.character(NA),
+                      book          = as.character(NA),
+                      abstract      = as.character(NA),
+                      include       = as.character(NA),
+                      comment       = as.character(NA),
+                      es.id         = as.character(NA),
+                      focal.species = as.character(NA),
+                      focal.n       = as.character(NA),
+                      focal.density = as.character(NA),
+                      focal.size    = as.character(NA),
+                      mut.species   = as.character(NA),
+                      mut.n         = as.character(NA),
+                      mut.density   = as.character(NA),
+                      mut.size      = as.character(NA),
+                      comp.species  = as.character(NA), 
+                      comp.n        = as.character(NA),
+                      comp.density  = as.character(NA),
+                      comp.size     = as.character(NA),
+                      pred.species  = as.character(NA), 
+                      pred.n        = as.character(NA),  
+                      pred.density  = as.character(NA),
+                      pred.size     = as.character(NA),
+                      interaction   = as.character(NA),   
+                      trait         = as.character(NA),         
+                      treatment     = as.character(NA),
+                      location      = as.character(NA),      
+                      measure       = as.character(NA),       
+                      direction     = as.character(NA),     
+                      n.c           = as.character(NA),           
+                      mean.c        = as.character(NA),        
+                      error.c       = as.character(NA),       
+                      error.type.c  = as.character(NA),  
+                      n.e           = as.character(NA),           
+                      mean.e        = as.character(NA),        
+                      error.e       = as.character(NA),       
+                      error.type.e  = as.character(NA))
 
 # Remove objects
-rm(wos.1, wos.2)
+rm(wos.comp, wos.pred, wos.mut)
 ```
 
 ### Step 3: Evaluate articles
 
 ```{r, echo = `FALSE`}
 # Evaluate articles
-wos <- ma.eval(wos, 1,    "yes", "field exp")
-wos <- ma.eval(wos, 2,    "no", "obs")
-wos <- ma.eval(wos, 3,    "no", "obs")
-wos <- ma.eval(wos, 4,    "no", "obs")
-wos <- ma.eval(wos, 5,    "no", "obs")
-wos <- ma.eval(wos, 6,    "no", "sediment, field exp")
-wos <- ma.eval(wos, 7,    "no", "obs")
-wos <- ma.eval(wos, 8,    "no", "obs")
-wos <- ma.eval(wos, 9,    "maybe", "field exp")
-wos <- ma.eval(wos, 10,   "no", "obs")
-wos <- ma.eval(wos, 11,   "no", "obs")
-wos <- ma.eval(wos, 12,   "no", "food pref, field exp")
-wos <- ma.eval(wos, 13,   "no", "obs")
-wos <- ma.eval(wos, 14,   "maybe", "field exp")
-wos <- ma.eval(wos, 15,   "prob no", "field exp")
-wos <- ma.eval(wos, 16,   "no", "field exp")
-wos <- ma.eval(wos, 17,   "no", "macro")
-wos <- ma.eval(wos, 18,   "maybe", "mutualism")
-wos <- ma.eval(wos, 19,   "prob yes", "field exp")
-wos <- ma.eval(wos, 20,   "prob no", "obs")
-wos <- ma.eval(wos, 21,   "prob yes", "field exp")
-wos <- ma.eval(wos, 22,   "no", "obs")
-wos <- ma.eval(wos, 23,   "no", "obs")
-wos <- ma.eval(wos, 24,   "no", "obs")
-wos <- ma.eval(wos, 25,   "no", "obs")
-wos <- ma.eval(wos, 26,   "maybe", "field exp")
-wos <- ma.eval(wos, 27,   "prob no", "field exp")
-wos <- ma.eval(wos, 28,   "no", "review")
-wos <- ma.eval(wos, 29,   "no", "obs")
-wos <- ma.eval(wos, 30,   "prob yes", "field exp")
-wos <- ma.eval(wos, 31,   "no", "obs")
-wos <- ma.eval(wos, 32,   "maybe", "field exp")
-wos <- ma.eval(wos, 33,   "no", "grazing pref, field exp")
-wos <- ma.eval(wos, 34,   "prob no", "intra, field exp")
-wos <- ma.eval(wos, 35,   "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 36,   "no", "obs")
-wos <- ma.eval(wos, 37,   "no", "obs")
-wos <- ma.eval(wos, 38,   "no", "obs")
-wos <- ma.eval(wos, 39,   "no", "pollutant")
-wos <- ma.eval(wos, 40,   "no", "review")
-wos <- ma.eval(wos, 41,   "maybe", "lab exp")
-wos <- ma.eval(wos, 42,   "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 43,   "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 44,   "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 45,   "yes", "field exp")
-wos <- ma.eval(wos, 46,   "no", "obs")
-wos <- ma.eval(wos, 47,   "no", "obs")
-wos <- ma.eval(wos, 48,   "no", "obs")
-wos <- ma.eval(wos, 49,   "no", "review")
-wos <- ma.eval(wos, 50,   "maybe", "complex system, field exp")
-wos <- ma.eval(wos, 51,   "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 52,   "no", "intra, field exp")
-wos <- ma.eval(wos, 53,   "yes", "inter, field exp")
-wos <- ma.eval(wos, 54,   "no", "field exp")
-wos <- ma.eval(wos, 55,   "no", "model")
-wos <- ma.eval(wos, 56,   "no", "obs")
-wos <- ma.eval(wos, 57,   "no", "obs")
-wos <- ma.eval(wos, 58,   "maybe", "lab exp")
-wos <- ma.eval(wos, 59,   "no", "model")
-wos <- ma.eval(wos, 60,   "no", "obs")
-wos <- ma.eval(wos, 61,   "prob yes", "field exp")
-wos <- ma.eval(wos, 62,   "no", "obs")
-wos <- ma.eval(wos, 63,   "no", "obs, model")
-wos <- ma.eval(wos, 64,   "maybe", "inter, field exp")
-wos <- ma.eval(wos, 65,   "maybe", "parasitism, field exp")
-wos <- ma.eval(wos, 66,   "prob yes", "inter, lab exp")
-wos <- ma.eval(wos, 67,   "no", "obs")
-wos <- ma.eval(wos, 68,   "maybe", "parasitism, field exp")
-wos <- ma.eval(wos, 69,   "maybe", "pollutant")
-wos <- ma.eval(wos, 70,   "yes", "field exp")
+wos <- ma.eval(wos, 1,    "no", "economics")
+wos <- ma.eval(wos, 2,    "no", "evo")
+wos <- ma.eval(wos, 3,    "no", "agricultural model")
+wos <- ma.eval(wos, 4,    "yes", "mut, field exp")
+wos <- ma.eval(wos, 5,    "yes", "comp, field exp")
+wos <- ma.eval(wos, 6,    "yes", "comp, resource pulse, field exp")
+wos <- ma.eval(wos, 7,    "yes", "comp, field exp")
+wos <- ma.eval(wos, 8,    "no", "economics")
+wos <- ma.eval(wos, 9,    "prob no", "virus")
+wos <- ma.eval(wos, 10,   "prob no", "intra feeding behavior")
+wos <- ma.eval(wos, 11,   "yes", "pred, field exp")
+wos <- ma.eval(wos, 12,   "no", "electronics")
+wos <- ma.eval(wos, 13,   "no", "english")
+wos <- ma.eval(wos, 14,   "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 15,   "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 16,   "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 17,   "maybe", "comp, co2, field exp")
+wos <- ma.eval(wos, 18,   "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 19,   "maybe", "read")
+wos <- ma.eval(wos, 20,   "yes", "field exp")
+wos <- ma.eval(wos, 21,   "yes", "field exp")
+wos <- ma.eval(wos, 22,   "yes", "field exp")
+wos <- ma.eval(wos, 23,   "yes", "field exp")
+wos <- ma.eval(wos, 24,   "no", "economics")
+wos <- ma.eval(wos, 25,   "maybe", "read")
+wos <- ma.eval(wos, 26,   "no", "obituary")
+wos <- ma.eval(wos, 27,   "yes", "comp, field exp")
+wos <- ma.eval(wos, 28,   "yes", "comp, field exp")
+wos <- ma.eval(wos, 29,   "prob not", "obs")
+wos <- ma.eval(wos, 30,   "prob yes", "removal, field exp")
+wos <- ma.eval(wos, 31,   "no", "weird")
+wos <- ma.eval(wos, 32,   "prob yes", "removal")
+wos <- ma.eval(wos, 33,   "no", "human")
+wos <- ma.eval(wos, 34,   "prob yes", "field exp")
+wos <- ma.eval(wos, 35,   "prob yes", "field exp")
+wos <- ma.eval(wos, 36,   "no", "human, model")
+wos <- ma.eval(wos, 37,   "no", "model")
+wos <- ma.eval(wos, 38,   "no", "chemistry")
+wos <- ma.eval(wos, 39,   "yes", "plants")
+wos <- ma.eval(wos, 40,   "yes", "plants")
+wos <- ma.eval(wos, 41,   "no", "model")
+wos <- ma.eval(wos, 42,   "prob yes", "field exp")
+wos <- ma.eval(wos, 43,   "no", "economics")
+wos <- ma.eval(wos, 44,   "no", "economics")
+wos <- ma.eval(wos, 45,   "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 46,   "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 47,   "no", "electronics")
+wos <- ma.eval(wos, 48,   "maybe", "read")
+wos <- ma.eval(wos, 49,   "no", "economics")
+wos <- ma.eval(wos, 50,   "no", "model")
+wos <- ma.eval(wos, 51,   "maybe", "polyploid")
+wos <- ma.eval(wos, 52,   "no", "human")
+wos <- ma.eval(wos, 53,   "no", "economics")
+wos <- ma.eval(wos, 54,   "no", "economics")
+wos <- ma.eval(wos, 55,   "yes", "field exp")
+wos <- ma.eval(wos, 56,   "no", "model")
+wos <- ma.eval(wos, 57,   "yes", "field exp")
+wos <- ma.eval(wos, 58,   "prob yes", "read")
+wos <- ma.eval(wos, 59,   "maybe", "obs")
+wos <- ma.eval(wos, 60,   "prob yes", "field exp")
+wos <- ma.eval(wos, 61,   "yes", "field exp")
+wos <- ma.eval(wos, 62,   "yes", "protein")
+wos <- ma.eval(wos, 63,   "yes", "field exp")
+wos <- ma.eval(wos, 64,   "prob yes", "removal, field exp")
+wos <- ma.eval(wos, 65,   "prob yes", "field exp")
+wos <- ma.eval(wos, 66,   "yes", "review, read")
+wos <- ma.eval(wos, 67,   "no", "economics")
+wos <- ma.eval(wos, 68,   "no", "humans")
+wos <- ma.eval(wos, 69,   "no", "humans")
+wos <- ma.eval(wos, 70,   "maybe", "read")
 wos <- ma.eval(wos, 71,   "prob yes", "field exp")
-wos <- ma.eval(wos, 72,   "no", "obs")
-wos <- ma.eval(wos, 73,   "yes", "field exp")
-wos <- ma.eval(wos, 74,   "no", "model")
-wos <- ma.eval(wos, 75,   "maybe", "biological control")
-wos <- ma.eval(wos, 76,   "no", "review")
-wos <- ma.eval(wos, 77,   "no", "review")
-wos <- ma.eval(wos, 78,   "no", "obs")
-wos <- ma.eval(wos, 79,   "prob yes", "field exp")
-wos <- ma.eval(wos, 80,   "no", "obs")
-wos <- ma.eval(wos, 81,   "no", "obs")
-wos <- ma.eval(wos, 82,   "no", "obs")
-wos <- ma.eval(wos, 83,   "prob yes", "field exp")
-wos <- ma.eval(wos, 83,   "prob yes", "field exp")
-wos <- ma.eval(wos, 84,   "yes", "ma of comp and predation")
-wos <- ma.eval(wos, 85,   "no", "obs")
-wos <- ma.eval(wos, 86,   "no", "method")
-wos <- ma.eval(wos, 87,   "yes", "inter, field exp")
-wos <- ma.eval(wos, 88,   "prob not", "complex comm, field exp")
-wos <- ma.eval(wos, 89,   "no", "obs")
-wos <- ma.eval(wos, 90,   "maybe", "complex comm, field exp")
-wos <- ma.eval(wos, 91,   "prob not", "intra, field exp")
-wos <- ma.eval(wos, 92,   "maybe", "predation pressure, lab exp")
-wos <- ma.eval(wos, 93,   "maybe", "predation pressure, field exp")
-wos <- ma.eval(wos, 94,   "no", "obs")
-wos <- ma.eval(wos, 95,   "no", "model")
-wos <- ma.eval(wos, 96,   "prob not", "intra, field exp")
-wos <- ma.eval(wos, 97,   "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 98,   "prob not", "petri exp")
-wos <- ma.eval(wos, 99,   "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 100,  "no", "obs")
-wos <- ma.eval(wos, 101,  "no", "intra, polymorphism")
-wos <- ma.eval(wos, 102,  "maybe", "inter, mutualism")
-wos <- ma.eval(wos, 103,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 104,  "no", "model")
-wos <- ma.eval(wos, 105,  "maybe", "mutualism, field exp")
-wos <- ma.eval(wos, 106,  "yes", "field exp")
-wos <- ma.eval(wos, 107,  "prob not", "pH, field exp")
-wos <- ma.eval(wos, 108,  "prob yes", "field exp")
-wos <- ma.eval(wos, 109,  "prob not", "rp, field exp")
-wos <- ma.eval(wos, 110,  "maybe", "petri dish")
-wos <- ma.eval(wos, 111,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 112,  "no", "obs")
-wos <- ma.eval(wos, 113,  "no", "obs")
-wos <- ma.eval(wos, 114,  "maybe", "field exp")
-wos <- ma.eval(wos, 115,  "prob yes", "cannibalism, field exp")
-wos <- ma.eval(wos, 116,  "maybe", "herbivory, squirrel, field exp")
-wos <- ma.eval(wos, 117,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 118,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 119,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 120,  "no", "obs")
-wos <- ma.eval(wos, 121,  "prob not", "inter, field exp")
-wos <- ma.eval(wos, 122,  "no", "obs")
-wos <- ma.eval(wos, 123,  "no", "review")
-wos <- ma.eval(wos, 124,  "prob not", "intra, field exp")
-wos <- ma.eval(wos, 125,  "no", "review")
-wos <- ma.eval(wos, 126,  "no", "obs")
-wos <- ma.eval(wos, 127,  "yes", "field exp")
-wos <- ma.eval(wos, 128,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 129,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 130,  "prob not", "intra, field exp")
-wos <- ma.eval(wos, 131,  "yes", "field exp")
-wos <- ma.eval(wos, 132,  "yes", "field exp")
-wos <- ma.eval(wos, 133,  "no", "review")
-wos <- ma.eval(wos, 134,  "no", "obs")
-wos <- ma.eval(wos, 135,  "no", "obs")
-wos <- ma.eval(wos, 136,  "no", "model")
-wos <- ma.eval(wos, 137,  "prob yes", "obs but pred removal, exp")
-wos <- ma.eval(wos, 138,  "prob not", "obs, exp")
-wos <- ma.eval(wos, 139,  "no", "obs")
-wos <- ma.eval(wos, 140,  "no", "obs")
-wos <- ma.eval(wos, 141,  "no", "obs")
-wos <- ma.eval(wos, 142,  "no", "obs")
-wos <- ma.eval(wos, 143,  "no", "obs")
-wos <- ma.eval(wos, 144,  "prob not", "obs, field exp")
-wos <- ma.eval(wos, 145,  "no", "obs")
-wos <- ma.eval(wos, 146,  "no", "obs")
-wos <- ma.eval(wos, 147,  "no", "obs")
-wos <- ma.eval(wos, 148,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 149,  "prob not", "read")
-wos <- ma.eval(wos, 150,  "prob yes", "field exp")
-wos <- ma.eval(wos, 151,  "prob yes", "pred, lab exp")
-wos <- ma.eval(wos, 152,  "yes", "lab exp")
-wos <- ma.eval(wos, 153,  "prob not", "obs exp")
-wos <- ma.eval(wos, 154,  "no", "model")
-wos <- ma.eval(wos, 155,  "no", "model")
-wos <- ma.eval(wos, 156,  "prob yes", "field exp")
-wos <- ma.eval(wos, 157,  "no", "review")
-wos <- ma.eval(wos, 158,  "no", "introduced rabbit, review")
-wos <- ma.eval(wos, 159,  "prob not", "intra, field exp")
-wos <- ma.eval(wos, 160,  "no", "obs")
-wos <- ma.eval(wos, 161,  "no", "obs")
-wos <- ma.eval(wos, 162,  "maybe", "read")
-wos <- ma.eval(wos, 163,  "maybe", "review, model, phytophagous insects, read")
-wos <- ma.eval(wos, 164,  "maybe", "complex comm, field exp")
-wos <- ma.eval(wos, 165,  "maybe", "parasitism, lab exp")
-wos <- ma.eval(wos, 166,  "no", "obs")
-wos <- ma.eval(wos, 167,  "no", "obs")
-wos <- ma.eval(wos, 168,  "no", "obs")
-wos <- ma.eval(wos, 169,  "maybe", "inter, field exp")
-wos <- ma.eval(wos, 170,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 171,  "no", "obs")
-wos <- ma.eval(wos, 172,  "prob yes", "herbivory, field exp")
-wos <- ma.eval(wos, 173,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 174,  "no", "partial kill, obs, field exp")
-wos <- ma.eval(wos, 175,  "no", "obs")
-wos <- ma.eval(wos, 176,  "maybe", "biological control, field exp")
-wos <- ma.eval(wos, 177,  "prob yes", "pred, lab exp")
-wos <- ma.eval(wos, 178,  "no", "obs")
-wos <- ma.eval(wos, 179,  "no", "obs")
-wos <- ma.eval(wos, 180,  "no", "obs")
-wos <- ma.eval(wos, 181,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 182,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 183,  "maybe", "inter, food, lab exp")
-wos <- ma.eval(wos, 184,  "prob not", "intra, food, lab exp")
-wos <- ma.eval(wos, 185,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 186,  "maybe", "low/high pred, field exp")
-wos <- ma.eval(wos, 187,  "prob yes", "herbivory, field exp")
-wos <- ma.eval(wos, 188,  "prob yes", "field exp")
-wos <- ma.eval(wos, 189,  "no", "obs")
-wos <- ma.eval(wos, 190,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 191,  "maybe", "inter, field exp")
-wos <- ma.eval(wos, 192,  "maybe", "herbivory, field exp")
-wos <- ma.eval(wos, 193,  "maybe", "colonization, lab exp")
-wos <- ma.eval(wos, 194,  "no", "behavior, intra, genetics")
-wos <- ma.eval(wos, 195,  "maybe", "read, obs")
-wos <- ma.eval(wos, 196,  "prob yes", "parasite, host-plant, obs")
-wos <- ma.eval(wos, 197,  "prob not", "sex-based, lab exp")
-wos <- ma.eval(wos, 198,  "maybe", "rock-paper-scissors, lab exp")
-wos <- ma.eval(wos, 199,  "no", "obs")
-wos <- ma.eval(wos, 200,  "no", "obs")
-wos <- ma.eval(wos, 201,  "maybe", "read")
-wos <- ma.eval(wos, 202,  "prob yes", "many pred, field exp")
-wos <- ma.eval(wos, 203,  "maybe", "several inter to pred, lab exp")
-wos <- ma.eval(wos, 204,  "no", "obs")
-wos <- ma.eval(wos, 205,  "no", "obs")
-wos <- ma.eval(wos, 206,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 207,  "no", "long-term, spatiotemporal stuff")
-wos <- ma.eval(wos, 208,  "no", "obs")
+wos <- ma.eval(wos, 72,   "no", "human")
+wos <- ma.eval(wos, 73,   "prob not", "read, hermaphrodites")
+wos <- ma.eval(wos, 74,   "prob not", "sperm comp")
+wos <- ma.eval(wos, 75,   "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 76,   "no", "chemistry")
+wos <- ma.eval(wos, 77,   "no", "chemistry")
+wos <- ma.eval(wos, 78,   "no", "evolution")
+wos <- ma.eval(wos, 79,   "yes", "field exp")
+wos <- ma.eval(wos, 80,   "prob yes", "field exp")
+wos <- ma.eval(wos, 81,   "prob yes", "read, old tree clearing")
+wos <- ma.eval(wos, 82,   "prob yes", "field exp")
+wos <- ma.eval(wos, 83,   "no", "human")
+wos <- ma.eval(wos, 84,   "no", "what?")
+wos <- ma.eval(wos, 85,   "maybe", "read")
+wos <- ma.eval(wos, 86,   "prob yes", "field exp")
+wos <- ma.eval(wos, 87,   "no", "human")
+wos <- ma.eval(wos, 88,   "no", "human")
+wos <- ma.eval(wos, 89,   "no", "economics")
+wos <- ma.eval(wos, 90,   "no", "economics")
+wos <- ma.eval(wos, 91,   "maybe", "cannibalism")
+wos <- ma.eval(wos, 92,   "no", "economics")
+wos <- ma.eval(wos, 93,   "prob yes", "plants, read")
+wos <- ma.eval(wos, 94,   "no", "human")
+wos <- ma.eval(wos, 95,   "prob not", "virus")
+wos <- ma.eval(wos, 96,   "no", "human")
+wos <- ma.eval(wos, 97,   "maybe", "pest species")
+wos <- ma.eval(wos, 98,   "prob not", "obs")
+wos <- ma.eval(wos, 99,   "prob yes", "field exp")
+wos <- ma.eval(wos, 100,  "maybe", "pollen")
+wos <- ma.eval(wos, 101,  "no", "economics")
+wos <- ma.eval(wos, 102,  "no", "human")
+wos <- ma.eval(wos, 103,  "maybe", "comp, field exp")
+wos <- ma.eval(wos, 104,  "maybe", "polymorphism, intra")
+wos <- ma.eval(wos, 105,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 106,  "no", "human")
+wos <- ma.eval(wos, 107,  "prob yes", "fire exc, field exp")
+wos <- ma.eval(wos, 108,  "maybe", "seems complex comm")
+wos <- ma.eval(wos, 109,  "prob not", "self-compatbiilty")
+wos <- ma.eval(wos, 110,  "maybe", "seems obs")
+wos <- ma.eval(wos, 111,  "no", "human")
+wos <- ma.eval(wos, 112,  "no", "human")
+wos <- ma.eval(wos, 113,  "maybe", "seems complex comm")
+wos <- ma.eval(wos, 114,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 115,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 116,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 117,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 118,  "no", "model")
+wos <- ma.eval(wos, 119,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 120,  "no", "chemistry")
+wos <- ma.eval(wos, 121,  "maybe", "neighbor removal")
+wos <- ma.eval(wos, 122,  "no", "weird")
+wos <- ma.eval(wos, 123,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 124,  "no", "electronics")
+wos <- ma.eval(wos, 125,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 126,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 127,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 128,  "no", "model")
+wos <- ma.eval(wos, 129,  "no", "model")
+wos <- ma.eval(wos, 130,  "no", "sperm comp, review")
+wos <- ma.eval(wos, 131,  "no", "economics")
+wos <- ma.eval(wos, 132,  "maybe", "hermaphrodite")
+wos <- ma.eval(wos, 133,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 134,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 135,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 136,  "prob not", "obs")
+wos <- ma.eval(wos, 137,  "no", "weird")
+wos <- ma.eval(wos, 138,  "no", "economics")
+wos <- ma.eval(wos, 139,  "no", "economics")
+wos <- ma.eval(wos, 140,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 141,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 142,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 143,  "no", "human, robot")
+wos <- ma.eval(wos, 144,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 145,  "maybe", "self-comp")
+wos <- ma.eval(wos, 146,  "no", "model")
+wos <- ma.eval(wos, 147,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 148,  "no", "human")
+wos <- ma.eval(wos, 149,  "no", "human")
+wos <- ma.eval(wos, 150,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 151,  "maybe", "seems intra")
+wos <- ma.eval(wos, 152,  "no", "sperm comp")
+wos <- ma.eval(wos, 153,  "no", "soil comp for molecules")
+wos <- ma.eval(wos, 154,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 155,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 156,  "prob not", "seems intra")
+wos <- ma.eval(wos, 157,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 158,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 159,  "no", "economics")
+wos <- ma.eval(wos, 160,  "maybe", "mixed tree stands")
+wos <- ma.eval(wos, 161,  "maybe", "propaglue comp")
+wos <- ma.eval(wos, 162,  "no", "model")
+wos <- ma.eval(wos, 163,  "maybe", "read")
+wos <- ma.eval(wos, 164,  "no", "sperm comp")
+wos <- ma.eval(wos, 165,  "no", "method")
+wos <- ma.eval(wos, 166,  "prob not", "hermaphrodite")
+wos <- ma.eval(wos, 167,  "no", "volleyball?")
+wos <- ma.eval(wos, 168,  "no", "economics")
+wos <- ma.eval(wos, 169,  "no", "human")
+wos <- ma.eval(wos, 170,  "prob yes", "field exp")
+wos <- ma.eval(wos, 171,  "prob no", "intra, geno")
+wos <- ma.eval(wos, 172,  "no", "economics")
+wos <- ma.eval(wos, 173,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 174,  "yes", "comp, pred, field exp")
+wos <- ma.eval(wos, 175,  "no", "economimcs")
+wos <- ma.eval(wos, 176,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 177,  "maybe", "crossing, field exp")
+wos <- ma.eval(wos, 178,  "no", "economimcs")
+wos <- ma.eval(wos, 179,  "maybe", "read")
+wos <- ma.eval(wos, 180,  "no", "chemistry")
+wos <- ma.eval(wos, 181,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 182,  "no", "what?")
+wos <- ma.eval(wos, 183,  "no", "economimcs")
+wos <- ma.eval(wos, 184,  "maybe", "mut, field exp")
+wos <- ma.eval(wos, 185,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 186,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 187,  "no", "economics")
+wos <- ma.eval(wos, 188,  "no", "human")
+wos <- ma.eval(wos, 189,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 190,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 191,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 192,  "maybe", "mut, comp, field exp")
+wos <- ma.eval(wos, 193,  "prob yes", "pred, comp, field exp")
+wos <- ma.eval(wos, 194,  "no", "economics")
+wos <- ma.eval(wos, 195,  "no", "economics")
+wos <- ma.eval(wos, 196,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 197,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 198,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 199,  "no", "human")
+wos <- ma.eval(wos, 200,  "prob not", "intra sex")
+wos <- ma.eval(wos, 201,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 202,  "prob not", "intra, field exp")
+wos <- ma.eval(wos, 203,  "prob not", "intra, field exp")
+wos <- ma.eval(wos, 204,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 205,  "prob not", "pollution, field exp")
+wos <- ma.eval(wos, 206,  "prob not", "introduction, field exp")
+wos <- ma.eval(wos, 207,  "no", "human")
+wos <- ma.eval(wos, 208,  "prob yes", "comp, field exp")
 wos <- ma.eval(wos, 209,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 210,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 211,  "no", "intra, gene flow")
-wos <- ma.eval(wos, 212,  "prob yes", "pred, lab exp")
-wos <- ma.eval(wos, 213,  "prob not", "model")
-wos <- ma.eval(wos, 214,  "prob not", "petals")
-wos <- ma.eval(wos, 215,  "maybe", "pred, maybe no control, lab exp")
-wos <- ma.eval(wos, 216,  "maybe", "virus?")
-wos <- ma.eval(wos, 217,  "no", "obs")
-wos <- ma.eval(wos, 218,  "prob ye", "parasite, field exp")
-wos <- ma.eval(wos, 219,  "no", "obs")
-wos <- ma.eval(wos, 220,  "no", "obs")
-wos <- ma.eval(wos, 221,  "prob not", "all pred, field exp")
-wos <- ma.eval(wos, 222,  "maybe", "read")
-wos <- ma.eval(wos, 223,  "prob yes", "field exp")
-wos <- ma.eval(wos, 224,  "no", "review")
-wos <- ma.eval(wos, 225,  "prob not", "defaunation, field exp")
-wos <- ma.eval(wos, 226,  "prob yes", "long-term exclusion, field exp")
-wos <- ma.eval(wos, 227,  "prob not", "intra, lab exp")
-wos <- ma.eval(wos, 228,  "no", "obs")
-wos <- ma.eval(wos, 229,  "prob not", "intra, lab exp")
-wos <- ma.eval(wos, 229,  "maybe", "pred, no control, lab exp")
-wos <- ma.eval(wos, 230,  "no", "obs")
-wos <- ma.eval(wos, 231,  "prob yes", "inter, lab exp")
-wos <- ma.eval(wos, 232,  "no", "obs")
-wos <- ma.eval(wos, 233,  "maybe", "pred, no control, lab exp")
-wos <- ma.eval(wos, 234,  "no", "obs")
-wos <- ma.eval(wos, 235,  "maybe", "pred, no control, lab exp")
-wos <- ma.eval(wos, 236,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 237,  "prob not", "pred comp, lab exp")
-wos <- ma.eval(wos, 238,  "no", "review")
-wos <- ma.eval(wos, 239,  "no", "review")
-wos <- ma.eval(wos, 240,  "no", "obs")
-wos <- ma.eval(wos, 241,  "no", "obs")
-wos <- ma.eval(wos, 242,  "no", "model")
-wos <- ma.eval(wos, 243,  "no", "obs")
-wos <- ma.eval(wos, 244,  "maybe", "pred, resource, lab exp")
-wos <- ma.eval(wos, 245,  "no", "obs")
-wos <- ma.eval(wos, 246,  "maybe", "pred, obs, field exp")
-wos <- ma.eval(wos, 247,  "prob not", "obs, sex-diffs")
-wos <- ma.eval(wos, 248,  "maybe", "cannibalism")
-wos <- ma.eval(wos, 249,  "maybe", "inter, complex comm, field exp")
-wos <- ma.eval(wos, 250,  "prob yes", "complex comm, lab exp")
-wos <- ma.eval(wos, 251,  "no", "lab exp")
-wos <- ma.eval(wos, 252,  "no", "lab exp")
-wos <- ma.eval(wos, 253,  "prob not", "obs")
-wos <- ma.eval(wos, 254,  "no", "obs")
-wos <- ma.eval(wos, 255,  "no", "obs")
-wos <- ma.eval(wos, 256,  "no", "intra, lab exp")
-wos <- ma.eval(wos, 257,  "maybe", "complex comm")
-wos <- ma.eval(wos, 258,  "no", "commentary")
-wos <- ma.eval(wos, 259,  "yes", "field exp")
-wos <- ma.eval(wos, 260,  "maybe", "field exp")
-wos <- ma.eval(wos, 261,  "maybe", "inter, field exp")
-wos <- ma.eval(wos, 262,  "no", "obs")
-wos <- ma.eval(wos, 263,  "maybe", "diff prey, field exp")
-wos <- ma.eval(wos, 264,  "maybe", "leech prey, field exp")
-wos <- ma.eval(wos, 265,  "prob not", "intra, field exp")
-wos <- ma.eval(wos, 266,  "prob not", "no pred control, field exp")
-wos <- ma.eval(wos, 267,  "no", "sediment, field exp")
-wos <- ma.eval(wos, 268,  "yes", "field exp")
-wos <- ma.eval(wos, 269,  "yes", "field exp")
-wos <- ma.eval(wos, 270,  "maybe", "field exp")
-wos <- ma.eval(wos, 271,  "no", "food, field exp")
-wos <- ma.eval(wos, 272,  "prob yes", "pred, maybe no control, field exp")
-wos <- ma.eval(wos, 273,  "maybe", "eco-evo")
-wos <- ma.eval(wos, 274,  "no", "review")
-wos <- ma.eval(wos, 275,  "prob yes", "field exp")
-wos <- ma.eval(wos, 276,  "no", "model, compare to field")
-wos <- ma.eval(wos, 277,  "maybe", "complex comm, field exp")
-wos <- ma.eval(wos, 278,  "no", "obs")
-wos <- ma.eval(wos, 279,  "prob yes", "density manipulation, field exp")
-wos <- ma.eval(wos, 280,  "no", "obs")
-wos <- ma.eval(wos, 281,  "no", "obs")
-wos <- ma.eval(wos, 282,  "no", "inter, substrate")
-wos <- ma.eval(wos, 283,  "no", "polymorphism, field exp")
-wos <- ma.eval(wos, 284,  "no", "obs")
-wos <- ma.eval(wos, 285,  "yes", "field exp")
-wos <- ma.eval(wos, 286,  "no", "obs")
-wos <- ma.eval(wos, 287,  "no", "obs")
-wos <- ma.eval(wos, 288,  "maybe", "read")
-wos <- ma.eval(wos, 289,  "no", "obs")
-wos <- ma.eval(wos, 290,  "no", "obs")
-wos <- ma.eval(wos, 291,  "no", "review")
-wos <- ma.eval(wos, 292,  "yes", "field exp")
-wos <- ma.eval(wos, 293,  "no", "obs")
-wos <- ma.eval(wos, 294,  "maybe", "herbivory, obs")
-wos <- ma.eval(wos, 295,  "prob yes", "inter, field exp")
-wos <- ma.eval(wos, 296,  "no", "review")
-wos <- ma.eval(wos, 297,  "no", "model")
-wos <- ma.eval(wos, 298,  "prob not", "obs")
-wos <- ma.eval(wos, 299,  "prob not", "field exp")
-wos <- ma.eval(wos, 300,  "maybe", "pred, field exp")
-wos <- ma.eval(wos, 301,  "prob not", "field exp")
-wos <- ma.eval(wos, 302,  "prob not", "olfactory, lab exp")
-wos <- ma.eval(wos, 303,  "prob not", "colonization, field exp")
-wos <- ma.eval(wos, 304,  "no", "obs")
-wos <- ma.eval(wos, 305,  "prob yes", "herbivory, lab exp")
-wos <- ma.eval(wos, 306,  "prob yes", "introduce mantis, field exp")
-wos <- ma.eval(wos, 307,  "no", "obs")
-wos <- ma.eval(wos, 308,  "no", "obs")
-wos <- ma.eval(wos, 309,  "maybe", "compare pred, field exp")
-wos <- ma.eval(wos, 310,  "prob yes", "read, field exp")
-wos <- ma.eval(wos, 311,  "maybe", "review, read")
-wos <- ma.eval(wos, 312,  "no", "obs")
-wos <- ma.eval(wos, 313,  "no", "obs")
-wos <- ma.eval(wos, 314,  "no", "obs")
-wos <- ma.eval(wos, 315,  "yes", "field exp")
-wos <- ma.eval(wos, 316,  "no", "pollution method")
-wos <- ma.eval(wos, 317,  "no", "pollution method")
-wos <- ma.eval(wos, 318,  "maybe", "inter, field exp")
-wos <- ma.eval(wos, 319,  "no", "biological control")
-wos <- ma.eval(wos, 320,  "no", "obs")
-wos <- ma.eval(wos, 321,  "no", "obs")
-wos <- ma.eval(wos, 322,  "no", "obs")
-wos <- ma.eval(wos, 323,  "no", "obs")
-wos <- ma.eval(wos, 324,  "yes", "field exp")
-wos <- ma.eval(wos, 325,  "yes", "field exp")
-wos <- ma.eval(wos, 326,  "no", "model, obs")
-wos <- ma.eval(wos, 327,  "no", "obs")
-wos <- ma.eval(wos, 328,  "no", "obs")
-wos <- ma.eval(wos, 329,  "maybe", "pred comp, field exp")
-wos <- ma.eval(wos, 330,  "maybe", "obs, field exp")
-```
+wos <- ma.eval(wos, 210,  "no", "human")
+wos <- ma.eval(wos, 211,  "prob yes", "pre, field exp")
+wos <- ma.eval(wos, 212,  "prob not", "polymorph")
+wos <- ma.eval(wos, 213,  "no", "chemistry")
+wos <- ma.eval(wos, 214,  "maybe", "succession, field exp")
+wos <- ma.eval(wos, 215,  "no", "human")
+wos <- ma.eval(wos, 216,  "no", "economics")
+wos <- ma.eval(wos, 217,  "no", "human")
+wos <- ma.eval(wos, 218,  "maybe", "read, ma of bird food manipulation")
+wos <- ma.eval(wos, 219,  "no", "human")
+wos <- ma.eval(wos, 220,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 221,  "yes", "all, field exp")
+wos <- ma.eval(wos, 222,  "problem", "same as 221")
+wos <- ma.eval(wos, 223,  "prob not", "intrasex, exp")
+wos <- ma.eval(wos, 224,  "no", "review, econ")
+wos <- ma.eval(wos, 225,  "yes", "pred, field exp")
+wos <- ma.eval(wos, 226,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 227,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 228,  "no", "human")
+wos <- ma.eval(wos, 229,  "no", "human")
+wos <- ma.eval(wos, 230,  "no", "human")
+wos <- ma.eval(wos, 231,  "maybe", "lab exp")
+wos <- ma.eval(wos, 232,  "no", "human")
+wos <- ma.eval(wos, 233,  "maybe", "seems intra")
+wos <- ma.eval(wos, 234,  "no", "human")
+wos <- ma.eval(wos, 235,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 236,  "no", "human")
+wos <- ma.eval(wos, 237,  "no", "cellular")
+wos <- ma.eval(wos, 238,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 239,    "no", "human")
+wos <- ma.eval(wos, 240,    "yes", "pred, field exp")
+wos <- ma.eval(wos, 241,    "no", "intra, field exp")
+wos <- ma.eval(wos, 242,    "maybe", "lab exp")
+wos <- ma.eval(wos, 243,    "no", "economics")
+wos <- ma.eval(wos, 244,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 245,    "no", "human")
+wos <- ma.eval(wos, 246,    "no", "economics")
+wos <- ma.eval(wos, 247,    "no", "economics")
+wos <- ma.eval(wos, 248,    "yes", "pred, field exp")
+wos <- ma.eval(wos, 249,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 250,    "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 251,    "maybe", "obs, fire")
+wos <- ma.eval(wos, 252,    "no", "human")
+wos <- ma.eval(wos, 253,    "no", "theory")
+wos <- ma.eval(wos, 254,    "no", "human")
+wos <- ma.eval(wos, 255,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 256,    "no", "model")
+wos <- ma.eval(wos, 257,    "no", "obs")
+wos <- ma.eval(wos, 258,    "no", "physics")
+wos <- ma.eval(wos, 259,    "yes", "pred, field exp")
+wos <- ma.eval(wos, 260,    "maybe", "comp, field exp")
+wos <- ma.eval(wos, 261,    "no", "human")
+wos <- ma.eval(wos, 262,    "no", "model")
+wos <- ma.eval(wos, 263,    "maybe", "seems complex comm")
+wos <- ma.eval(wos, 264,    "no", "economics")
+wos <- ma.eval(wos, 265,    "prob not", "obs")
+wos <- ma.eval(wos, 266,    "no", "tranportation")
+wos <- ma.eval(wos, 267,    "no", "chemistry")
+wos <- ma.eval(wos, 268,    "prob not", "cultivar")
+wos <- ma.eval(wos, 269,    "prob not", "intra")
+wos <- ma.eval(wos, 270,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 271,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 272,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 273,    "prob yes", "all, field exp")
+wos <- ma.eval(wos, 274,    "prob yes", "all, field exp")
+wos <- ma.eval(wos, 275,    "no", "economics")
+wos <- ma.eval(wos, 276,    "prob yes", "lab exp")
+wos <- ma.eval(wos, 277,    "no", "review")
+wos <- ma.eval(wos, 278,    "maybe", "read")
+wos <- ma.eval(wos, 279,    "no", "obs")
+wos <- ma.eval(wos, 280,    "maybe", "read, mangrove, nutrients")
+wos <- ma.eval(wos, 281,    "yes", "comp, field exp")
+wos <- ma.eval(wos, 282,    "no", "human")
+wos <- ma.eval(wos, 283,    "yes", "comp")
+wos <- ma.eval(wos, 284,    "no", "chemistry")
+wos <- ma.eval(wos, 285,    "no", "human")
+wos <- ma.eval(wos, 286,    "no", "economics")
+wos <- ma.eval(wos, 287,    "yes", "comp, field exp")
+wos <- ma.eval(wos, 288,    "no", "economics")
+wos <- ma.eval(wos, 289,    "yes", "comp, field exp")
+wos <- ma.eval(wos, 290,    "maybe", "mut, field exp")
+wos <- ma.eval(wos, 291,    "no", "human")
+wos <- ma.eval(wos, 292,    "no", "human")
+wos <- ma.eval(wos, 293,    "no", "human")
+wos <- ma.eval(wos, 294,    "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 295,    "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 296,    "maybe", "ploids")
+wos <- ma.eval(wos, 297,    "prob yes", "mut, field exp")
+#wos <- ma.eval(wos, 298,    "prob yes", "mut, field exp")
 
-```{r, echo = `FALSE`}
-# Add articles
-#wos <- ma.eval(wos, 330,  "maybe", "obs, field exp")
+# Print or search abstract
+#ma.abstract(wos, 298)
 
+# 350 is half
 # Evaluate progress
-ma.status(wos, es)
+ma.status(wos, details)
 
-# Print abstract
-article <- 330
-wos[article, "abstract"]
-#ma.search(wos, article)
-
-
-# Filter papers
-eval <- wos %>%
-  filter(!is.na(include))
-
-# Read these papers
-# 11, 103, 136, 156, 163, 296
-# Read 185 for first experiment
-# Read 311, anuran mesocosm review
-
-# Search for article
-#for(i in article){ma.search(wos, i)}
-# Next batch of articles
-#wos <- ma.eval(wos, XXX,   "XXX", "XXX")
+# Read
+# 2
+# 77
 ```
 
 ### Step 4: Calculate effect sizes
 
 ```{r, 1, echo = `FALSE`}
 ##############################################################################
-
-# ES 17_1
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_1",
-                            comment       = "Table 6",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.17,
-                            error.c       = 0.04,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.24,
-                            error.e       = 0.14,
-                            error.type.e  = "sd"))
+# ES 1_1
+es <- ma.es(wos, es, 1,
+            data.frame(comment       = "Table 6",
+                       es.id         = "1_1",
+                       focal.species = "Rana utricularia",
+                       focal.n       = 275,
+                       focal.density = NA,
+                       focal.size    = NA,
+                       comp.species  = "Several",
+                       comp.n        = "Many",
+                       comp.density  = NA,
+                       comp.size     = NA,
+                       pred.species  = "Notophthalmus viridescens dorsalis",
+                       pred.n        = 2,
+                       pred.density  = NA,
+                       pred.size     = NA,
+                       interaction   = "Predation and competition",
+                       trait         = "Survivorship",
+                       location      = "Duke Zoology Field Station, Durham, NC",
+                       measure       = "Mean",
+                       direction     = "-",
+                       n.c           = 2,
+                       mean.c        = 0.17,
+                       error.c       = 0.04,
+                       error.type.c  = "sd",
+                       n.e           = 5,
+                       mean.e        = 0.24,
+                       error.e       = 0.14,
+                       error.type.e  = "sd"))
 
 # ES 17_2
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_2",
-                            comment       = "Table 6",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6",
+                            es.id         = "1_2",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 4,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Survivorship",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -645,15 +628,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_3
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_3",
-                            comment       = "Table 6, % metamorph",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, % metamorph",
+                            es.id         = "1_3",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Development",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -669,15 +658,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_4
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_4",
-                            comment       = "Table 6, % metamorph",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, % metamorph",
+                            es.id         = "1_4",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 4,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Development",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -695,15 +690,21 @@ es <- ma.compile(wos, es, 17,
 ##############################################################################
 
 # ES 17_5
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_5",
-                            comment       = "Table 6, % metamorph",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, % metamorph",
+                            es.id         = "1_5",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density  = NA,
+                            focal.size     = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Biomass",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -719,15 +720,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_6
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_6",
-                            comment       = "Table 6, % metamorph",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, % metamorph",
+                            es.id         = "1_6",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 4,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Biomass",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -745,15 +752,21 @@ es <- ma.compile(wos, es, 17,
 ##############################################################################
 
 # ES 17_7
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_7",
-                            comment       = "Table 6, larval period",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, larval period",
+                            es.id         = "1_7",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Development",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -769,15 +782,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_8
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_8",
-                            comment       = "Table 6, larval period",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, larval period",
+                            es.id         = "1_8",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 4,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Development",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -795,15 +814,21 @@ es <- ma.compile(wos, es, 17,
 ##############################################################################
 
 # ES 17_9
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_9",
-                            comment       = "Table 6, growth rate",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, growth rate",
+                            es.id         = "1_9",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Growth rate",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -819,15 +844,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_10
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_10",
-                            comment       = "Table 6, growth rate",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, growth rate",
+                            es.id         = "1_10",
                             focal.species = "Rana utricularia",
                             focal.n       = 275,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Growth rate",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -845,15 +876,21 @@ es <- ma.compile(wos, es, 17,
 ##############################################################################
 
 # ES 17_11
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_11",
-                            comment       = "Table 6, growth rate",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, growth rate",
+                            es.id         = "1_11",
                             focal.species = "Bufo americanus",
                             focal.n       = 25,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Survivorship",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -869,15 +906,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_12
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_12",
-                            comment       = "Table 6, mass at meta",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, mass at meta",
+                            es.id         = "1_12",
                             focal.species = "Bufo americanus",
                             focal.n       = 25,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Biomass",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -893,15 +936,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_13
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_13",
-                            comment       = "Table 6, larval period",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, larval period",
+                            es.id         = "1_13",
                             focal.species = "Bufo americanus",
                             focal.n       = 25,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Development",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -917,15 +966,21 @@ es <- ma.compile(wos, es, 17,
                             error.type.e  = "sd"))
 
 # ES 17_14
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_14",
-                            comment       = "Table 6, larval period",
+es <- ma.es(wos, es, 1,
+                 data.frame(comment       = "Table 6, larval period",
+                            es.id         = "1_14",
                             focal.species = "Bufo americanus",
                             focal.n       = 25,
+                            focal.density = NA,
+                            focal.size    = NA,
                             comp.species  = "Several",
                             comp.n        = "Many",
+                            comp.density  = NA,
+                            comp.size     = NA,
                             pred.species  = "Notophthalmus viridescens dorsalis",
                             pred.n        = 2,
+                            pred.density  = NA,
+                            pred.size     = NA,
                             interaction   = "Predation and competition",
                             trait         = "Growth rate",
                             location      = "Duke Zoology Field Station, Durham, NC",
@@ -947,7 +1002,7 @@ es <- ma.compile(wos, es, 17,
 # Subset current data
 current <- es %>%
   filter(!is.na(include)) %>%
-  filter(include == "Y") %>%
+  filter(include == "yes") %>%
   mutate(
     # Data
     interaction = as.factor(interaction),
@@ -969,8 +1024,8 @@ current <- es %>%
 ggplot() +
   geom_point(current, mapping = aes(x = es,
                                     y = trait,
-                                    color = trait,
-                                    shape = interaction),
+                                    color = trait),
+                                    #shape = interaction),
              size = 2, alpha = 0.5, position = "jitter") +
   #geom_errorbar(current, mapping = aes(xmin = (es - es.se),
   #                                     xmax = (es + es.se),
@@ -986,2140 +1041,3 @@ ggplot() +
   pretty
 ```
 
-
-
-
-
-
-
-
-
-```{r, 1, echo = `FALSE`}
-##############################################################################
-wos <- ma.include(wos, 2,    "maybe", "many orgs, maybe extract figures")
-wos <- ma.include(wos, 3,    "maybe", "many orgs, maybe extract figures")
-wos <- ma.include(wos, 4,    "no", "treatments are vague")
-wos <- ma.include(wos, 5,    "no", "observational")
-wos <- ma.include(wos, 6,    "no", "missing stats")
-wos <- ma.include(wos, 7,    "no", "model")
-wos <- ma.include(wos, 8,    "maybe", "missing stats")
-wos <- ma.include(wos, 9,    "no", "review")
-wos <- ma.include(wos, 10,   "maybe", "unknown language")
-wos <- ma.include(wos, 11,   "prob no", "review, can't find")
-wos <- ma.include(wos, 12,   "prob no", "review, can't find")
-wos <- ma.include(wos, 13,   "no", "theory")
-wos <- ma.include(wos, 14,   "prob no", "previous colonization, no direct comp")
-wos <- ma.include(wos, 15,   "prob yes", "missing stats")
-wos <- ma.include(wos, 16,   "prob yes", "missing stats")
-wos <- ma.include(wos, 17,   "yes", "maybe more than table 6 but missing stats")
-wos <- ma.include(wos, 18,   "prob no", "observational")
-wos <- ma.include(wos, 19,   "yes", "field")
-wos <- ma.include(wos, 20,   "prob yes", "extract from figs")
-wos <- ma.include(wos, 21,   "prob yes", "extract from figs")
-wos <- ma.include(wos, 22,   "no", "observational")
-wos <- ma.include(wos, 23,   "no", "model")
-wos <- ma.include(wos, 24,   "maybe", "missing stats")
-wos <- ma.include(wos, 25,   "no", "observational")
-wos <- ma.include(wos, 26,   "yes", "extract from fig")
-wos <- ma.include(wos, 27,   "yes", "extract from table")
-wos <- ma.include(wos, 28,   "no", "model")
-wos <- ma.include(wos, 29,   "prob not", "complex system")
-wos <- ma.include(wos, 30,   "prob not", "complex system")
-wos <- ma.include(wos, 31,   "prob not", "complex system")
-wos <- ma.include(wos, 32,   "yes", "field")
-# ES 1_1
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_1",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 150,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(8.6, 22.1)),
-                            error.c       = sd(c(8.6, 22.1)),
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = mean(c(1.4, 27.6, 4.31)),
-                            error.e       = sd(c(1.4, 27.6, 4.31)),
-                            error.type.e  = "sd"))
-
-# ES 1_2
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_2",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 300,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(4.0, 29.6, 1.0)),
-                            error.c       = sd(c(4.0, 29.6, 1.0)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(7.3, 25.6)),
-                            error.e       = sd(c(7.3, 25.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_3
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_3",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 600,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(16.2, 21.0, 5.2)),
-                            error.c       = sd(c(16.2, 21.0, 5.2)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(12.6, 17.0)),
-                            error.e       = sd(c(12.6, 17.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_4
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_4",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 1200,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(17.7, 15.3, 0.5)),
-                            error.c       = sd(c(17.7, 15.3, 0.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(9.1, 21.6)),
-                            error.e       = sd(c(9.1, 21.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_5
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_5",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 150,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(6.8, 6.4, 2.8)),
-                            error.c       = sd(c(6.8, 6.4, 2.8)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(9.5, 30.5)),
-                            error.e       = sd(c(9.5, 30.5)),
-                            error.type.e  = "sd"))
-
-# ES 1_6
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_6",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 300,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(4.7, 32.6, 0.3)),
-                            error.c       = sd(c(4.7, 32.6, 0.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(9.2, 23.6)),
-                            error.e       = sd(c(9.2, 23.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_7
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_7",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 600,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(3.7, 23.3, 1.2)),
-                            error.c       = sd(c(3.7, 23.3, 1.2)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(10.3, 15.0)),
-                            error.e       = sd(c(10.3, 15.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_8
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_8",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 1200,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(8.8, 11.6, 0.4)),
-                            error.c       = sd(c(8.8, 11.6, 0.4)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(4.8, 7.1)),
-                            error.e       = sd(c(4.8, 7.1)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_9
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_9",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 150,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(14.6, 18.2)),
-                            error.c       = sd(c(14.6, 18.2)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(19.0, 18.0)),
-                            error.e       = sd(c(19.0, 18.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_10
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_10",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 300,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(17.5, 17.3, 17.0)),
-                            error.c       = sd(c(17.5, 17.3, 17.0)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(18.4, 17.0)),
-                            error.e       = sd(c(18.4, 17.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_11
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_11",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 600,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(16.7, 17.0, 15.3)),
-                            error.c       = sd(c(16.7, 17.0, 15.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(16.6, 16.6)),
-                            error.e       = sd(c(16.6, 16.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_12
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_12",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 1200,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(14.5, 15.4, 17.8)),
-                            error.c       = sd(c(14.5, 15.4, 17.8)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(15.5, 14.9)),
-                            error.e       = sd(c(15.5, 14.9)),
-                            error.type.e  = "sd"))
-
-# ES 1_13
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_13",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 150,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(35.0, 34.2, 30.7)),
-                            error.c       = sd(c(35.0, 34.2, 30.7)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(29.3, 28.5)),
-                            error.e       = sd(c(29.3, 28.5)),
-                            error.type.e  = "sd"))
-
-# ES 1_14
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_14",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 300,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(32.1, 25.2, 30.0)),
-                            error.c       = sd(c(32.1, 25.2, 30.0)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(29.3, 28.5)),
-                            error.e       = sd(c(29.3, 28.5)),
-                            error.type.e  = "sd"))
-
-# ES 1_15
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_15",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 600,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = mean(c(30.7, 24.0, 27.5)),
-                            error.c       = sd(c(30.7, 24.0, 27.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(24.5, 26.1)),
-                            error.e       = sd(c(24.5, 26.1)),
-                            error.type.e  = "sd"))
-
-# ES 1_16
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_16",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 1200,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(24.2, 24.1)),
-                            error.c       = sd(c(24.2, 24.1)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(25.9, 25.3)),
-                            error.e       = sd(c(25.9, 25.3)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_17
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_17",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 150,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(62.8, 64.8)),
-                            error.c       = sd(c(62.8, 64.8)),
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = mean(c(57.5, 61.4, 71.0)),
-                            error.e       = sd(c(57.5, 61.4, 71.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_18
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_18",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 300,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(57.2, 58.3, 76.3)),
-                            error.c       = sd(c(57.2, 58.3, 76.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(54.2, 59.2)),
-                            error.e       = sd(c(54.2, 59.2)),
-                            error.type.e  = "sd"))
-
-# ES 1_19
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_19",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 600,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(59.4, 61.1, 75.1)),
-                            error.c       = sd(c(59.4, 61.1, 75.1)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(58.3, 59.7)),
-                            error.e       = sd(c(58.3, 59.7)),
-                            error.type.e  = "sd"))
-
-# ES 1_20
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_20",
-                            comment       = "Table 1",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = 1200,
-                            comp.species  = "Rana pipiens",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(63.4, 66.4, 79.4)),
-                            error.c       = sd(c(63.4, 66.4, 79.4)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(60.4, 63.7)),
-                            error.e       = sd(c(60.4, 63.7)),
-                            error.type.e  = "sd"))
-
-# ES 1_21
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_21",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 150,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 150,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(77.7, 83.9, 91.5)),
-                            error.c       = sd(c(77.7, 83.9, 91.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(83.4, 77.8)),
-                            error.e       = sd(c(83.4, 77.8)),
-                            error.type.e  = "sd"))
-
-# ES 1_22
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_22",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 300,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 300,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(83.6, 86.1, 100.0)),
-                            error.c       = sd(c(83.6, 86.1, 100.0)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(78.5, 90.0)),
-                            error.e       = sd(c(78.5, 90.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_23
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_23",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 600,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 600,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(81.1, 103.1, 105.5)),
-                            error.c       = sd(c(81.1, 103.1, 105.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(87.8, 87.8)),
-                            error.e       = sd(c(87.8, 87.8)),
-                            error.type.e  = "sd"))
-
-# ES 1_24
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_24",
-                            comment       = "Table 1",
-                            focal.species = "Rana pipiens",
-                            focal.n       = 1200,
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = 1200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = mean(c(104.2, 104.0, 109.0)),
-                            error.c       = sd(c(104.2, 104.0, 109.0)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(100.6, 105.7)),
-                            error.e       = sd(c(100.6, 105.7)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_25
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_25",
-                            comment       = "Table 3, high food",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = "High density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(47.5, 17.3)),
-                            error.c       = sd(c(47.5, 17.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(16.9, 1.2)),
-                            error.e       = sd(c(16.9, 1.2)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_26
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_26",
-                            comment       = "Table 3, high food",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = "High density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(16.2, 16.6)),
-                            error.c       = sd(c(16.2, 16.6)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(17.4, 21.0)),
-                            error.e       = sd(c(17.4, 21.0)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_27
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_27",
-                            comment       = "Table 3, high food",
-                            focal.species = "Rana sylvatica",
-                            focal.n       = "High density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(60.0, 59.3)),
-                            error.c       = sd(c(60.0, 59.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(58.7, 68.8)),
-                            error.e       = sd(c(58.7, 68.8)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_28
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_28",
-                            comment       = "Table 4, high food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(8.0, 8.2)),
-                            error.c       = sd(c(8.0, 8.2)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(0.0, 1.1)),
-                            error.e       = sd(c(0.0, 1.1)),
-                            error.type.e  = "sd"))
-
-# ES 1_29
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_29",
-                            comment       = "Table 4, normal food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(26.8, 16.3)),
-                            error.c       = sd(c(26.8, 16.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(55.6, 7.4)),
-                            error.e       = sd(c(55.6, 7.4)),
-                            error.type.e  = "sd"))
-
-# ES 1_30
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_30",
-                            comment       = "Table 4, high food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(6.1, 10.5)),
-                            error.c       = sd(c(6.1, 10.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(0.3, 2.6)),
-                            error.e       = sd(c(0.3, 2.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_31
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_31",
-                            comment       = "Table 4, normal food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = mean(c(1.4, 2.3)),
-                            error.c       = sd(c(1.4, 2.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(6.4, 0.4)),
-                            error.e       = sd(c(6.4, 0.4)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_32
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_32",
-                            comment       = "Table 4, high food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "Low density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(21.1, 20.7)),
-                            error.c       = sd(c(21.1, 20.7)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(23.2, 21.6)),
-                            error.e       = sd(c(23.2, 21.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_33
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_33",
-                            comment       = "Table 4, high food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(21.0, 21.2)),
-                            error.c       = sd(c(21.0, 21.2)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(23.0, 22.6)),
-                            error.e       = sd(c(23.0, 22.6)),
-                            error.type.e  = "sd"))
-
-# ES 1_34
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_34",
-                            comment       = "Table 4, normal food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Body size",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(23.0, 20.5)),
-                            error.c       = sd(c(23.0, 20.5)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(21.8, 28.5)),
-                            error.e       = sd(c(21.8, 28.5)),
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 1_35
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_35",
-                            comment       = "Table 4, normal food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "Low density",
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(65.6, 63.7)),
-                            error.c       = sd(c(65.6, 63.7)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(67.2, 63.1)),
-                            error.e       = sd(c(67.2, 63.1)),
-                            error.type.e  = "sd"))
-
-# ES 1_36
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_36",
-                            comment       = "Table 4, high food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(85.0, 65.7)),
-                            error.c       = sd(c(85.0, 65.7)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(87.0, 90.0)),
-                            error.e       = sd(c(87.0, 90.0)),
-                            error.type.e  = "sd"))
-
-# ES 1_37
-es <- ma.compile(wos, es, 1,
-                 data.frame(es.id         = "1_37",
-                            comment       = "Table 4, normal food",
-                            focal.species = "Rana pipiens",
-                            focal.n       = "High density",
-                            comp.species  = "Rana sylvatica",
-                            comp.n        = "High density",
-                            pred.species  = "Several",
-                            pred.n        = "Unknown",
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "University of Michigan, ES George Reserve, Pinckney",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = mean(c(113.8, 84.3)),
-                            error.c       = sd(c(113.8, 84.3)),
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = mean(c(72.0, 95.0)),
-                            error.e       = sd(c(72.0, 95.0)),
-                            error.type.e  = "sd"))
-```
-
-```{r, 17, echo = `FALSE`}
-##############################################################################
-
-# ES 17_1
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_1",
-                            comment       = "Table 6",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.17,
-                            error.c       = 0.04,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.24,
-                            error.e       = 0.14,
-                            error.type.e  = "sd"))
-
-# ES 17_2
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_2",
-                            comment       = "Table 6",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.17,
-                            error.c       = 0.04,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.16,
-                            error.e       = 0.11,
-                            error.type.e  = "sd"))
-
-# ES 17_3
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_3",
-                            comment       = "Table 6, % metamorph",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 0.10,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.20,
-                            error.e       = 0.45,
-                            error.type.e  = "sd"))
-
-# ES 17_4
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_4",
-                            comment       = "Table 6, % metamorph",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 0.10,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.22,
-                            error.e       = 0.43,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_5
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_5",
-                            comment       = "Table 6, % metamorph",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 916.3,
-                            error.c       = 116.0,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 1329.0,
-                            error.e       = 376.2,
-                            error.type.e  = "sd"))
-
-# ES 17_6
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_6",
-                            comment       = "Table 6, % metamorph",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 916.3,
-                            error.c       = 116.0,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 880.3,
-                            error.e       = 321.7,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_7
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_7",
-                            comment       = "Table 6, larval period",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 151.2,
-                            error.c       = 5.9,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 136.0,
-                            error.e       = 4.8,
-                            error.type.e  = "sd"))
-
-# ES 17_8
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_8",
-                            comment       = "Table 6, larval period",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 151.2,
-                            error.c       = 5.9,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 96.7,
-                            error.e       = 21.2,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_9
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_9",
-                            comment       = "Table 6, growth rate",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 6.1,
-                            error.c       = 0.5,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 10.9,
-                            error.e       = 6.6,
-                            error.type.e  = "sd"))
-
-# ES 17_10
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_10",
-                            comment       = "Table 6, growth rate",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 4,
-                            mean.c        = 6.1,
-                            error.c       = 0.5,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 9.0,
-                            error.e       = 1.4,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_11
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_11",
-                            comment       = "Table 6, growth rate",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.16,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 0.08,
-                            error.e       = 0.11,
-                            error.type.e  = "sd"))
-
-# ES 17_12
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_12",
-                            comment       = "Table 6, mass at meta",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 152.1,
-                            error.c       = 24.4,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 163.3,
-                            error.e       = 7.8,
-                            error.type.e  = "sd"))
-
-# ES 17_13
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_13",
-                            comment       = "Table 6, larval period",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 40.6,
-                            error.c       = 0.9,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 39.3,
-                            error.e       = 0.5,
-                            error.type.e  = "sd"))
-
-# ES 17_14
-es <- ma.compile(wos, es, 17,
-                 data.frame(es.id         = "17_14",
-                            comment       = "Table 6, larval period",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 3.7,
-                            error.c       = 0.6,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 4.1,
-                            error.e       = 0.2,
-                            error.type.e  = "sd"))
-```
-
-```{r, 19, echo = `FALSE`}
-##############################################################################
-
-# ES 19_1
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_1",
-                            comment       = "Table 1, large after 1 week",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 15.3,
-                            error.c       = 0.44,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 13.3,
-                            error.e       = 0.11,
-                            error.type.e  = "sd"))
-
-# ES 19_2
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_2",
-                            comment       = "Table 1, small after 1 week",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 15.3,
-                            error.c       = 0.44,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 13.4,
-                            error.e       = 0.20,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 19_3
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_3",
-                            comment       = "Table 1, large after 8 week",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 23.1,
-                            error.c       = 1.00,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 21.6,
-                            error.e       = 1.62,
-                            error.type.e  = "sd"))
-
-# ES 19_4
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_4",
-                            comment       = "Table 1, small after 8 week",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Body size",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 23.1,
-                            error.c       = 1.00,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 22.5,
-                            error.e       = 1.83,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 19_5
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_5",
-                            comment       = "Table 1, large tadpoles",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Biomass",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 82.9,
-                            error.c       = 16.59,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 79.2,
-                            error.e       = 5.78,
-                            error.type.e  = "sd"))
-
-# ES 19_6
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_6",
-                            comment       = "Table 1, small tadpoles",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Biomass",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = 82.9,
-                            error.c       = 16.59,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 88.2,
-                            error.e       = 19.10,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 19_7
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_7",
-                            comment       = "Table 1, large, median date of meta",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = 180.0,
-                            error.c       = 3.61,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 196.7,
-                            error.e       = 6.66,
-                            error.type.e  = "sd"))
-
-# ES 19_8
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_8",
-                            comment       = "Table 1, large, median date of meta",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Development",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 3,
-                            mean.c        = 180.0,
-                            error.c       = 3.61,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 191.3,
-                            error.e       = 2.89,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 19_9
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_9",
-                            comment       = "Table 1, large",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.87,
-                            error.c       = 0.096,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.58,
-                            error.e       = 0.187,
-                            error.type.e  = "sd"))
-
-# ES 19_10
-es <- ma.compile(wos, es, 19,
-                 data.frame(es.id         = "19_10",
-                            comment       = "Table 1, small",
-                            focal.species = "Bufo calamita",
-                            focal.n       = 200,
-                            comp.species  = "Rana temporaria",
-                            comp.n        = 200,
-                            pred.species  = "None",
-                            pred.n        = 0,
-                            interaction   = "Competition",
-                            trait         = "Survivorship",
-                            location      = "Southern England",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.87,
-                            error.c       = 0.096,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.44,
-                            error.e       = 0.201,
-                            error.type.e  = "sd"))
-```
-
-```{r, 31, echo = FALSE}
-##############################################################################
-
-# ES 31_1
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_1",
-                            comment       = "Table 1, larval period, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 66.1,
-                            error.c       = 1.0,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 65.1,
-                            error.e       = 2.6,
-                            error.type.e  = "sd"))
-
-# ES 31_2
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_2",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 209.0,
-                            error.c       = 28.3,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 193.6,
-                            error.e       = 18.5,
-                            error.type.e  = "sd"))
-
-# ES 31_3
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_3",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 3.15,
-                            error.c       = 0.38,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.98,
-                            error.e       = 0.29,
-                            error.type.e  = "sd"))
-
-# ES 31_4
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_4",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.30,
-                            error.c       = 0.10,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.25,
-                            error.e       = 0.06,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 31_5
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_5",
-                            comment       = "Table 1, larval period, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 51.8,
-                            error.c       = 0.2,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 54.2,
-                            error.e       = 2.0,
-                            error.type.e  = "sd"))
-
-# ES 31_6
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_6",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 173.6,
-                            error.c       = 16.7,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 142.7,
-                            error.e       = 29.4,
-                            error.type.e  = "sd"))
-
-# ES 31_7
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_7",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 3.35,
-                            error.c       = 0.31,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.65,
-                            error.e       = 0.56,
-                            error.type.e  = "sd"))
-
-# ES 31_8
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_8",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.55,
-                            error.c       = 0.18,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.65,
-                            error.e       = 0.20,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 31_9
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_9",
-                            comment       = "Table 1, larval period, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 65.8,
-                            error.c       = 1.6,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 64.3,
-                            error.e       = 2.1,
-                            error.type.e  = "sd"))
-
-# ES 31_10
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_10",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 172.5,
-                            error.c       = 15.7,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 168.4,
-                            error.e       = 19.0,
-                            error.type.e  = "sd"))
-
-# ES 31_11
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_11",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 2.63,
-                            error.c       = 0.26,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.61,
-                            error.e       = 0.22,
-                            error.type.e  = "sd"))
-
-# ES 31_12
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_12",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.19,
-                            error.c       = 0.07,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.33,
-                            error.e       = 0.16,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 31_13
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_13",
-                            comment       = "Table 1, larval period, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 54.0,
-                            error.c       = 0.7,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 54.9,
-                            error.e       = 0.4,
-                            error.type.e  = "sd"))
-
-# ES 31_14
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_14",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 158.0,
-                            error.c       = 8.6,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 161.5,
-                            error.e       = 8.1,
-                            error.type.e  = "sd"))
-
-# ES 31_15
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_15",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 2.92,
-                            error.c       = 0.13,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.94,
-                            error.e       = 0.14,
-                            error.type.e  = "sd"))
-
-# ES 31_16
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_16",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 40,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.67,
-                            error.c       = 0.04,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.79,
-                            error.e       = 0.04,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 31_1
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_1",
-                            comment       = "Table 1, larval period, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 66.1,
-                            error.c       = 1.0,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 65.1,
-                            error.e       = 2.6,
-                            error.type.e  = "sd"))
-
-# ES 31_2
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_2",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 209.0,
-                            error.c       = 28.3,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 193.6,
-                            error.e       = 18.5,
-                            error.type.e  = "sd"))
-
-# ES 31_3
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_3",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 3.15,
-                            error.c       = 0.38,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.98,
-                            error.e       = 0.29,
-                            error.type.e  = "sd"))
-
-# ES 31_4
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_4",
-                            comment       = "Table 1, first time (e)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.30,
-                            error.c       = 0.10,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.25,
-                            error.e       = 0.06,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 31_5
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_5",
-                            comment       = "Table 1, larval period, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Development",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 51.8,
-                            error.c       = 0.2,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 54.2,
-                            error.e       = 2.0,
-                            error.type.e  = "sd"))
-
-# ES 31_6
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_6",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Biomass",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 173.6,
-                            error.c       = 16.7,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 142.7,
-                            error.e       = 29.4,
-                            error.type.e  = "sd"))
-
-# ES 31_7
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_7",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Growth rate",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 3.35,
-                            error.c       = 0.31,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 2.65,
-                            error.e       = 0.56,
-                            error.type.e  = "sd"))
-
-# ES 31_8
-es <- ma.compile(wos, es, 31,
-                 data.frame(es.id         = "31_8",
-                            comment       = "Table 1, first time (l)",
-                            focal.species = "Pseudacris triseriata",
-                            focal.n       = 20,
-                            comp.species  = "None",
-                            comp.n        = 0,
-                            pred.species  = "Ambystoma tigrinum",
-                            pred.n        = 2,
-                            interaction   = "Predation",
-                            trait         = "Survivorship",
-                            location      = "34,18,02 N, 110,53,00 W",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 3,
-                            mean.c        = 0.55,
-                            error.c       = 0.18,
-                            error.type.c  = "sd",
-                            n.e           = 3,
-                            mean.e        = 0.65,
-                            error.e       = 0.20,
-                            error.type.e  = "sd"))
-
-
-```

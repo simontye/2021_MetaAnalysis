@@ -1,0 +1,154 @@
+---
+title: "synthesis"
+author: "SPT"
+date: "2021_10_23"
+output: github_document
+---
+
+### Step 1: Load packages \and data
+
+```{r, echo = `FALSE`}
+# Install packages
+#devtools::install_github("MathiasHarrer/dmetar")
+#install.packages("searcher")
+
+# Load packages
+library(tidyverse)
+library(meta)
+library(metafor)
+library(esc)
+library(gdata)
+library(searcher)
+library(ape)
+library(Hmisc)
+#library(dmetar)
+
+ # Reset global environment
+rm(list = ls())
+
+# Change working directory
+setwd("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis")
+
+# Load data
+co2.data <- read.csv(file = "data/practice/Curtis_1998.csv",  head = TRUE, sep = ",")
+
+# Load tree
+co2.tree <- read.tree("data/practice/tree_curtis1998.tre")
+
+# Plot theme
+pretty <- theme_classic(base_size = 10) +
+  theme(axis.title.y      = element_text(margin = margin(r = 10)),
+        axis.title.x      = element_text(margin = margin(t = 10)), 
+        axis.text         = element_text(color = "black"), 
+        axis.ticks        = element_line(color = "black"),
+        axis.ticks.length = unit(.25, "cm"), 
+        legend.key.size   = unit(1.5,  'lines'),
+        legend.position   = "right")
+```
+
+### Step 2: Format data and calculate effect sizes
+
+```{r, echo = `FALSE`}
+# Reformat co2 data
+co2.data <- co2.data %>%
+  mutate_all(tolower) %>%
+  rename_all(tolower) %>%
+  dplyr::rename(species.name = species) %>%
+  mutate(genus = str_to_title(genus)) %>%
+  mutate(species  = paste0(genus, "_", species.name)) %>%
+  mutate(x        = as.numeric(x),
+         id       = as.factor(id),
+         paper    = as.factor(paper),
+         genus    = as.factor(genus),
+         fungrp   = as.factor(fungrp),
+         co2.ambi = as.numeric(co2.ambi),
+         co2.elev = as.numeric(co2.elev),
+         units    = as.factor(units),
+         time     = as.numeric(time),
+         pot      = as.numeric(pot),
+         method   = as.factor(method),
+         stock    = as.factor(stock),
+         xtrt     = as.factor(xtrt),
+         level    = as.factor(level),
+         m1i      = as.numeric(m1i),
+         sd1i     = as.numeric(sd1i),
+         n1i      = as.numeric(n1i),
+         m2i      = as.numeric(m2i),
+         sd2i     = as.numeric(sd2i),
+         n2i      = as.numeric(n2i),
+         species  = as.character(species))
+
+# Fix species in co2data
+co2.data$species <- gsub("Populusx_euramericana", "Populus_euramericana", co2.data$species)
+co2.data$species <- gsub("Nothofagus_fusca", "Fuscospora_fusca", co2.data$species)
+
+# Calculate effect sizes (yi = es, vi = variance)
+co2.data <- metafor::escalc(data = co2.data,
+                            measure = "SMD",
+                            m1i  = m1i,
+                            sd1i = sd1i,
+                            n1i  = n1i,
+                            m2i  = m2i,
+                            sd2i = sd2i,
+                            n2i  = n2i)
+
+# Add additional statistics
+co2.data$dval <- with(co2.data, (m1i - m2i) / sqrt(((n1i-1)*sd1i^2 + (n2i-1)*sd2i^2)/(n1i + n2i - 2)))
+co2.data$tval <- with(co2.data, dval / sqrt(1/n1i + 1/n2i))
+co2.data$pval <- 2 * with(co2.data, pt(abs(tval), df = n1i + n2i - 2, lower.tail=FALSE))
+co2.data$sign <- with(co2.data, ifelse(m1i > m2i, 1, -1))
+co2.data[,c("dval","tval","pval")] <- round(co2.data[,c("dval","tval","pval")], 2)
+
+# Conduct random effects model
+co2.rma <- rma(yi, vi, data = co2.data)
+
+# Calculate t-statistics from p-values
+#co2.data$tval <- replmiss(co2.data$tval, with(co2.data, sign * qt(pval/2, df = n1i + n2i - 2,
+#                                                              lower.tail = FALSE)))
+
+# Multivariate, multilevel linear mixed effects model
+co2.rma.mv <- rma.mv(yi = yi, V = vi, random = list(~1 | paper, ~1 | id), 
+    method = "REML", data = co2.data)
+summary(co2.rma.mv)
+
+# Add branch length
+co2.tree <- compute.brlen(co2.tree)
+
+# Create correlation matrix of phylo relatedness
+co2.cor <- vcv(co2.tree, cor = T)
+
+# Check species names
+#A <- sort(levels(as.factor(co2.data$species)))
+#B <- sort(levels(as.factor(co2.tree$tip.label)))
+#setdiff(A, B)
+
+# Random effects model that accounts for phylogenetic relatedness
+co2.rma.phylo <- rma.mv(yi = yi, V = vi, random = list(~1 | species, ~1 | paper, ~1 | id),
+                        R = list(species = co2.cor), method = "REML", data = co2.data)
+summary(co2.rma.phylo)
+```
+
+```{r, echo = `FALSE`}
+# Quick plot
+ggplot() +
+  geom_point(co2.data, mapping = aes(x     = yi,
+                                     y     = fungrp,
+                                     color = fungrp,
+                                     shape = method),
+             size = 2, alpha = 0.5, position = "jitter") +
+  #geom_errorbar(current, mapping = aes(xmin = (es - es.se),
+  #                                     xmax = (es + es.se),
+  #                                     y    = type),
+  #              width = 0.1) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Effect size (SMD)",
+       y = "Functional group",
+       color = "Functional group",
+       shape = "Method") +
+  #scale_color_manual(values = c("blue"),
+  #                   labels = c("Competition")) +
+  #scale_x_continuous(limits = c(-2, 2)) +
+  pretty
+
+```
+
