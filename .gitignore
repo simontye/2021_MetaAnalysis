@@ -37,3 +37,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# PDFs of papers
+papers/old_papers/
+papers/new_papers/

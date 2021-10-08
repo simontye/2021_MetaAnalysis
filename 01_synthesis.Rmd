@@ -10,6 +10,7 @@ output: github_document
 ```{r, echo = `FALSE`}
 # Install packages
 #devtools::install_github("MathiasHarrer/dmetar")
+#devtools::install_github("daniel1noble/metaDigitise")
 #install.packages("searcher")
 
 # Load packages
@@ -19,9 +20,10 @@ library(metafor)
 library(esc)
 library(gdata)
 library(searcher)
+library(metaDigitise)
 #library(dmetar)
 
- # Reset global environment
+# Reset global environment
 rm(list = ls())
 
 # Change working directory
@@ -86,7 +88,7 @@ ma.es <- function(input,
   }
   # Add study details
   output <- add.rows(output, c(input[article.id, 1:8],
-                               study.data[1:27],
+                               study.data[1:24],
                                as.numeric(study.es$es),
                                as.numeric(study.es$se),
                                as.numeric(study.es$var),
@@ -203,46 +205,44 @@ chamber <- chamber %>%
                      include, comment))
 
 # Create empty df to store effect sizes
-details <- data.frame(id            = as.character(NA),
-                      year          = as.character(NA),
-                      title         = as.character(NA),
-                      authors       = as.character(NA),
-                      journal       = as.character(NA),
-                      book          = as.character(NA),
-                      abstract      = as.character(NA),
-                      include       = as.character(NA),
-                      comment       = as.character(NA),
-                      es.id         = as.character(NA),
-                      focal.species = as.character(NA),
-                      focal.n       = as.character(NA),
-                      focal.density = as.character(NA),
-                      focal.size    = as.character(NA),
-                      mut.species   = as.character(NA),
-                      mut.n         = as.character(NA),
-                      mut.density   = as.character(NA),
-                      mut.size      = as.character(NA),
-                      comp.species  = as.character(NA), 
-                      comp.n        = as.character(NA),
-                      comp.density  = as.character(NA),
-                      comp.size     = as.character(NA),
-                      pred.species  = as.character(NA), 
-                      pred.n        = as.character(NA),  
-                      pred.density  = as.character(NA),
-                      pred.size     = as.character(NA),
-                      interaction   = as.character(NA),   
-                      trait         = as.character(NA),         
-                      treatment     = as.character(NA),
-                      location      = as.character(NA),      
-                      measure       = as.character(NA),       
-                      direction     = as.character(NA),     
-                      n.c           = as.character(NA),           
-                      mean.c        = as.character(NA),        
-                      error.c       = as.character(NA),       
-                      error.type.c  = as.character(NA),  
-                      n.e           = as.character(NA),           
-                      mean.e        = as.character(NA),        
-                      error.e       = as.character(NA),       
-                      error.type.e  = as.character(NA))
+es <- data.frame(id            = as.character(NA),
+                 year          = as.character(NA),
+                 title         = as.character(NA),
+                 authors       = as.character(NA),
+                 journal       = as.character(NA),
+                 book          = as.character(NA),
+                 abstract      = as.character(NA),
+                 include       = as.character(NA),
+                 comment       = as.character(NA),
+                 es.id         = as.character(NA),
+                 focal.species = as.character(NA),
+                 focal.n       = as.character(NA),
+                 focal.density = as.character(NA),
+                 focal.size    = as.character(NA),
+                 mut.species   = as.character(NA),
+                 mut.n         = as.character(NA),
+                 mut.density   = as.character(NA),
+                 mut.size      = as.character(NA),
+                 comp.species  = as.character(NA), 
+                 comp.n        = as.character(NA),
+                 comp.density  = as.character(NA),
+                 comp.size     = as.character(NA),
+                 pred.species  = as.character(NA), 
+                 pred.n        = as.character(NA),  
+                 pred.density  = as.character(NA),
+                 pred.size     = as.character(NA),
+                 interaction   = as.character(NA),   
+                 trait         = as.character(NA),         
+                 treatment     = as.character(NA),
+                 location      = as.character(NA),      
+                 measure       = as.character(NA),       
+                 direction     = as.character(NA),
+                 es            = as.character(NA),
+                 se            = as.character(NA),
+                 var           = as.character(NA),
+                 ci.lo         = as.character(NA),
+                 ci.hi         = as.character(NA),
+                 w             = as.character(NA))
 
 # Remove objects
 rm(wos.comp, wos.pred, wos.mut)
@@ -490,73 +490,164 @@ wos <- ma.eval(wos, 235,  "prob yes", "pred, field exp")
 wos <- ma.eval(wos, 236,  "no", "human")
 wos <- ma.eval(wos, 237,  "no", "cellular")
 wos <- ma.eval(wos, 238,  "prob yes", "pred, field exp")
-wos <- ma.eval(wos, 239,    "no", "human")
-wos <- ma.eval(wos, 240,    "yes", "pred, field exp")
-wos <- ma.eval(wos, 241,    "no", "intra, field exp")
-wos <- ma.eval(wos, 242,    "maybe", "lab exp")
-wos <- ma.eval(wos, 243,    "no", "economics")
-wos <- ma.eval(wos, 244,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 245,    "no", "human")
-wos <- ma.eval(wos, 246,    "no", "economics")
-wos <- ma.eval(wos, 247,    "no", "economics")
-wos <- ma.eval(wos, 248,    "yes", "pred, field exp")
-wos <- ma.eval(wos, 249,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 250,    "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 251,    "maybe", "obs, fire")
-wos <- ma.eval(wos, 252,    "no", "human")
-wos <- ma.eval(wos, 253,    "no", "theory")
-wos <- ma.eval(wos, 254,    "no", "human")
-wos <- ma.eval(wos, 255,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 256,    "no", "model")
-wos <- ma.eval(wos, 257,    "no", "obs")
-wos <- ma.eval(wos, 258,    "no", "physics")
-wos <- ma.eval(wos, 259,    "yes", "pred, field exp")
-wos <- ma.eval(wos, 260,    "maybe", "comp, field exp")
-wos <- ma.eval(wos, 261,    "no", "human")
-wos <- ma.eval(wos, 262,    "no", "model")
-wos <- ma.eval(wos, 263,    "maybe", "seems complex comm")
-wos <- ma.eval(wos, 264,    "no", "economics")
-wos <- ma.eval(wos, 265,    "prob not", "obs")
-wos <- ma.eval(wos, 266,    "no", "tranportation")
-wos <- ma.eval(wos, 267,    "no", "chemistry")
-wos <- ma.eval(wos, 268,    "prob not", "cultivar")
-wos <- ma.eval(wos, 269,    "prob not", "intra")
-wos <- ma.eval(wos, 270,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 271,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 272,    "prob yes", "mut, field exp")
-wos <- ma.eval(wos, 273,    "prob yes", "all, field exp")
-wos <- ma.eval(wos, 274,    "prob yes", "all, field exp")
-wos <- ma.eval(wos, 275,    "no", "economics")
-wos <- ma.eval(wos, 276,    "prob yes", "lab exp")
-wos <- ma.eval(wos, 277,    "no", "review")
-wos <- ma.eval(wos, 278,    "maybe", "read")
-wos <- ma.eval(wos, 279,    "no", "obs")
-wos <- ma.eval(wos, 280,    "maybe", "read, mangrove, nutrients")
-wos <- ma.eval(wos, 281,    "yes", "comp, field exp")
-wos <- ma.eval(wos, 282,    "no", "human")
-wos <- ma.eval(wos, 283,    "yes", "comp")
-wos <- ma.eval(wos, 284,    "no", "chemistry")
-wos <- ma.eval(wos, 285,    "no", "human")
-wos <- ma.eval(wos, 286,    "no", "economics")
-wos <- ma.eval(wos, 287,    "yes", "comp, field exp")
-wos <- ma.eval(wos, 288,    "no", "economics")
-wos <- ma.eval(wos, 289,    "yes", "comp, field exp")
-wos <- ma.eval(wos, 290,    "maybe", "mut, field exp")
-wos <- ma.eval(wos, 291,    "no", "human")
-wos <- ma.eval(wos, 292,    "no", "human")
-wos <- ma.eval(wos, 293,    "no", "human")
-wos <- ma.eval(wos, 294,    "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 295,    "prob yes", "comp, field exp")
-wos <- ma.eval(wos, 296,    "maybe", "ploids")
-wos <- ma.eval(wos, 297,    "prob yes", "mut, field exp")
-#wos <- ma.eval(wos, 298,    "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 239,  "no", "human")
+wos <- ma.eval(wos, 240,  "yes", "pred, field exp")
+wos <- ma.eval(wos, 241,  "no", "intra, field exp")
+wos <- ma.eval(wos, 242,  "maybe", "lab exp")
+wos <- ma.eval(wos, 243,  "no", "economics")
+wos <- ma.eval(wos, 244,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 245,  "no", "human")
+wos <- ma.eval(wos, 246,  "no", "economics")
+wos <- ma.eval(wos, 247,  "no", "economics")
+wos <- ma.eval(wos, 248,  "yes", "pred, field exp")
+wos <- ma.eval(wos, 249,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 250,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 251,  "maybe", "obs, fire")
+wos <- ma.eval(wos, 252,  "no", "human")
+wos <- ma.eval(wos, 253,  "no", "theory")
+wos <- ma.eval(wos, 254,  "no", "human")
+wos <- ma.eval(wos, 255,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 256,  "no", "model")
+wos <- ma.eval(wos, 257,  "no", "obs")
+wos <- ma.eval(wos, 258,  "no", "physics")
+wos <- ma.eval(wos, 259,  "yes", "pred, field exp")
+wos <- ma.eval(wos, 260,  "maybe", "comp, field exp")
+wos <- ma.eval(wos, 261,  "no", "human")
+wos <- ma.eval(wos, 262,  "no", "model")
+wos <- ma.eval(wos, 263,  "maybe", "seems complex comm")
+wos <- ma.eval(wos, 264,  "no", "economics")
+wos <- ma.eval(wos, 265,  "prob not", "obs")
+wos <- ma.eval(wos, 266,  "no", "tranportation")
+wos <- ma.eval(wos, 267,  "no", "chemistry")
+wos <- ma.eval(wos, 268,  "prob not", "cultivar")
+wos <- ma.eval(wos, 269,  "prob not", "intra")
+wos <- ma.eval(wos, 270,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 271,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 272,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 273,  "prob yes", "all, field exp")
+wos <- ma.eval(wos, 274,  "prob yes", "all, field exp")
+wos <- ma.eval(wos, 275,  "no", "economics")
+wos <- ma.eval(wos, 276,  "prob yes", "lab exp")
+wos <- ma.eval(wos, 277,  "no", "review")
+wos <- ma.eval(wos, 278,  "maybe", "read")
+wos <- ma.eval(wos, 279,  "no", "obs")
+wos <- ma.eval(wos, 280,  "maybe", "read, mangrove, nutrients")
+wos <- ma.eval(wos, 281,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 282,  "no", "human")
+wos <- ma.eval(wos, 283,  "yes", "comp")
+wos <- ma.eval(wos, 284,  "no", "chemistry")
+wos <- ma.eval(wos, 285,  "no", "human")
+wos <- ma.eval(wos, 286,  "no", "economics")
+wos <- ma.eval(wos, 287,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 288,  "no", "economics")
+wos <- ma.eval(wos, 289,  "yes", "comp, field exp")
+wos <- ma.eval(wos, 290,  "maybe", "mut, field exp")
+wos <- ma.eval(wos, 291,  "no", "human")
+wos <- ma.eval(wos, 292,  "no", "human")
+wos <- ma.eval(wos, 293,  "no", "human")
+wos <- ma.eval(wos, 294,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 295,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 296,  "maybe", "ploids")
+wos <- ma.eval(wos, 297,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 298,  "prob yes", "lab exp")
+wos <- ma.eval(wos, 299,  "no", "evo")
+wos <- ma.eval(wos, 300,  "no", "evo")
+wos <- ma.eval(wos, 301,  "prob not", "seems intra")
+wos <- ma.eval(wos, 302,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 303,  "prob not", "seems intra")
+wos <- ma.eval(wos, 304,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 305,  "no", "human")
+wos <- ma.eval(wos, 306,  "no", "human")
+wos <- ma.eval(wos, 307,  "no", "human")
+wos <- ma.eval(wos, 308,  "no", "human")
+wos <- ma.eval(wos, 309,  "maybe", "read")
+wos <- ma.eval(wos, 310,  "no", "economics")
+wos <- ma.eval(wos, 311,  "prob not", "seems intra")
+wos <- ma.eval(wos, 312,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 313,  "prob yes", "comp, field exp")
+wos <- ma.eval(wos, 314,  "yes", "field exp")
+wos <- ma.eval(wos, 315,  "no", "human")
+wos <- ma.eval(wos, 316,  "no", "human")
+wos <- ma.eval(wos, 317,  "prob not", "seems intra")
+wos <- ma.eval(wos, 318,  "prob not", "pred, complex comm")
+wos <- ma.eval(wos, 319,  "prob yes", "comp, lab exp")
+wos <- ma.eval(wos, 320,  "maybe", "comp, complex comm, field exp")
+wos <- ma.eval(wos, 320,  "maybe", "comp, complex comm, field exp")
+wos <- ma.eval(wos, 321,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 322,  "no", "economics")
+wos <- ma.eval(wos, 323,  "no", "obs")
+wos <- ma.eval(wos, 324,  "no", "obs")
+wos <- ma.eval(wos, 325,  "no", "economics")
+wos <- ma.eval(wos, 326,  "no", "human")
+wos <- ma.eval(wos, 327,  "prob yes", "pred, field exp")
+wos <- ma.eval(wos, 328,  "maybe", "read, review")
+wos <- ma.eval(wos, 329,  "no", "policy")
+wos <- ma.eval(wos, 330,  "prob yes", "pred, lab exp")
+wos <- ma.eval(wos, 331,  "no", "intra, herbicide")
+wos <- ma.eval(wos, 332,  "no", "policy")
+wos <- ma.eval(wos, 333,  "no", "intra, field exp")
+wos <- ma.eval(wos, 334,  "no", "complex comm, field exp")
+wos <- ma.eval(wos, 335,  "prob yes", "inter, field exp")
+wos <- ma.eval(wos, 336,  "no", "obs")
+wos <- ma.eval(wos, 337,  "maybe", "inter, field exp")
+wos <- ma.eval(wos, 338,  "yes", "inter, field exp")
+wos <- ma.eval(wos, 339,  "no", "economics")
+wos <- ma.eval(wos, 340,  "maybe", "reivew, ma on evo defense cost")
+wos <- ma.eval(wos, 341,  "no", "human")
+wos <- ma.eval(wos, 342,  "no", "chemistry")
+wos <- ma.eval(wos, 343,  "no", "human")
+wos <- ma.eval(wos, 344,  "no", "human")
+wos <- ma.eval(wos, 345,  "no", "ecosystem")
+wos <- ma.eval(wos, 346,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 347,  "prob yes", "mut, field exp")
+wos <- ma.eval(wos, 348,  "no", "human")
+wos <- ma.eval(wos, 349,  "no", "human")
+wos <- ma.eval(wos, 350,  "no", "human")
+wos <- ma.eval(wos, 351,  "maybe", "seems intra, song callback")
+wos <- ma.eval(wos, 352,  "no", "human")
+wos <- ma.eval(wos, 353,  "no", "chemistry")
+wos <- ma.eval(wos, 354,  "no", "human")
+wos <- ma.eval(wos, 355,  "no", "human")
+
+# Changed opinions
+wos <- ma.eval(wos, 5,    "no", "obs")
+wos <- ma.eval(wos, 6,    "prob not", "complex comm")
+wos <- ma.eval(wos, 7,    "prob not", "no pred control")
+wos <- ma.eval(wos, 20,   "no", "intra, no pred control")
+wos <- ma.eval(wos, 21,   "maybe", "read")
+wos <- ma.eval(wos, 23,   "no", "intra")
+wos <- ma.eval(wos, 28,   "no", "nematicide")
+wos <- ma.eval(wos, 40,   "prob not", "no comp control")
+wos <- ma.eval(wos, 55,   "maybe", "foreign lang")
+wos <- ma.eval(wos, 57,   "prob not", "complex comm")
+wos <- ma.eval(wos, 61,   "prob not", "no error")
+wos <- ma.eval(wos, 62,   "no", "proteins")
+wos <- ma.eval(wos, 63,   "maybe", "obs")
+wos <- ma.eval(wos, 66,   "maybe", "review")
+wos <- ma.eval(wos, 175,  "prob not", "no error")
+wos <- ma.eval(wos, 221,  "maybe", "temporal patterns")
+wos <- ma.eval(wos, 227,  "prob not", "complex comm")
+wos <- ma.eval(wos, 240,  "prob not", "evo")
+wos <- ma.eval(wos, 248,  "prob yes", "evo")
+wos <- ma.eval(wos, 281,  "prob yes", "read, review")
+wos <- ma.eval(wos, 283,  "maybe", "read")
+wos <- ma.eval(wos, 287,  "maybe", "read")
+wos <- ma.eval(wos, 289,  "maybe", "read")
+
+```
+
+```{r, echo = `FALSE`}
+
+# WoS
+#wos <- ma.eval(wos, 355,  "no", "human")
+
 
 # Print or search abstract
-#ma.abstract(wos, 298)
+ma.abstract(wos, 356)
 
 # 350 is half
 # Evaluate progress
-ma.status(wos, details)
+ma.status(wos, es)
 
 # Read
 # 2
@@ -566,15 +657,69 @@ ma.status(wos, details)
 ### Step 4: Calculate effect sizes
 
 ```{r, 1, echo = `FALSE`}
-##############################################################################
+# Subset articles (yes)
+yes <- wos %>%
+  filter(include == "yes")
+
+# Subset articles (prob yes)
+prob.yes <- wos %>%
+  filter(include == "prob yes")
+```
+
+```{r, echo = FALSE}
+# File names and article ids
+filenames <- data.frame(filename   = c("Bontrager2014_Fig1.png",
+                                       "Bontrager2014_Fig5a.png",
+                                       "Bontrager2014_Fig5b.png",
+                                       "Bontrager2014_Fig5c.png",
+                                       "Bontrager2014_Fig5d.png",
+                                       "Bontrager2014_Fig5e.png",
+                                       "Schadler2010_Fig1.png",
+                                       "Kenison2016_Fig2a.png",
+                                       "Kenison2016_Fig2b.png",
+                                       "Kenison2016_Fig2c.png",
+                                       "Kenison2016_Fig2d.png",
+                                       "Kenison2016_Fig2e.png",
+                                       "Kenison2016_Fig2f.png"),
+                        article.id = c(226, 226, 226, 226, 226, 226,
+                                       4,
+                                       314, 314, 314, 314, 314, 314)) %>%
+  mutate(filename = as.factor(filename))
+
+######################################
+# Schadler et a. 2010
+data.figs <- metaDigitise("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/new_figs")
+
+data.figs$filename
+
+# Join WoS and figure data
+test <- data.figs %>%
+  full_join(., filenames, by = c("filename")) %>%
+  mutate(group_id = as.character(group_id))
+
+# Split identifying information (group_id)
+test <- strsplit(test$group_id,',', fixed = FALSE)
+
+# Convert list to df
+test <- do.call(rbind.data.frame, test)
+
+######## need to find efficient way to go from fig.1 to es for ma.es
+######## need to find efficient way to go from fig.1 to es for ma.es
+```
+
+```{r, echo = `FALSE`}
 # ES 1_1
-es <- ma.es(wos, es, 1,
+es <- ma.es(yes, es, 1,
             data.frame(comment       = "Table 6",
                        es.id         = "1_1",
                        focal.species = "Rana utricularia",
                        focal.n       = 275,
                        focal.density = NA,
                        focal.size    = NA,
+                       mut.species   = NA,
+                       mut.n         = NA,
+                       mut.density   = NA,
+                       mut.size      = NA,
                        comp.species  = "Several",
                        comp.n        = "Many",
                        comp.density  = NA,
@@ -585,6 +730,7 @@ es <- ma.es(wos, es, 1,
                        pred.size     = NA,
                        interaction   = "Predation and competition",
                        trait         = "Survivorship",
+                       treatment     = NA,
                        location      = "Duke Zoology Field Station, Durham, NC",
                        measure       = "Mean",
                        direction     = "-",
@@ -596,6 +742,49 @@ es <- ma.es(wos, es, 1,
                        mean.e        = 0.24,
                        error.e       = 0.14,
                        error.type.e  = "sd"))
+
+
+```
+
+```{r, echo = `FALSE`}
+# ES 1_1
+es <- ma.es(yes, es, 1,
+            data.frame(comment       = "Table 6",
+                       es.id         = "1_1",
+                       focal.species = "Rana utricularia",
+                       focal.n       = 275,
+                       focal.density = NA,
+                       focal.size    = NA,
+                       mut.species   = NA,
+                       mut.n         = NA,
+                       mut.density   = NA,
+                       mut.size      = NA,
+                       comp.species  = "Several",
+                       comp.n        = "Many",
+                       comp.density  = NA,
+                       comp.size     = NA,
+                       pred.species  = "Notophthalmus viridescens dorsalis",
+                       pred.n        = 2,
+                       pred.density  = NA,
+                       pred.size     = NA,
+                       interaction   = "Predation and competition",
+                       trait         = "Survivorship",
+                       treatment     = NA,
+                       location      = "Duke Zoology Field Station, Durham, NC",
+                       measure       = "Mean",
+                       direction     = "-",
+                       n.c           = 2,
+                       mean.c        = 0.17,
+                       error.c       = 0.04,
+                       error.type.c  = "sd",
+                       n.e           = 5,
+                       mean.e        = 0.24,
+                       error.e       = 0.14,
+                       error.type.e  = "sd"))
+
+
+
+
 
 # ES 17_2
 es <- ma.es(wos, es, 1,
