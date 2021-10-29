@@ -1,7 +1,7 @@
 ---
 title: "synthesis"
 author: "SPT"
-date: "2021_10_22"
+date: "2021_10_27"
 output: github_document
 ---
 
@@ -982,30 +982,163 @@ wos <- ma.eval(wos, 281,  "prob yes", "read, review")
 wos <- ma.eval(wos, 283,  "maybe", "read")
 wos <- ma.eval(wos, 287,  "maybe", "read")
 wos <- ma.eval(wos, 289,  "maybe", "read")
+wos <- ma.eval(wos, 11,   "prob not", "complex comm, excl exp")
+wos <- ma.eval(wos, 22,   "prob not", "eco-evo, tri-trophic")
+wos <- ma.eval(wos, 27,   "prob not", "complex comm")
+wos <- ma.eval(wos, 176,  "prob not", "inter, complex comm")
+wos <- ma.eval(wos, 189,  "prob not", "inter, complex comm")
+wos <- ma.eval(wos, 225,  "prob not", "ungulate exlc, complex comm")
+wos <- ma.eval(wos, 521,  "no", "plasticity")
+wos <- ma.eval(wos, 610,  "no", "methods")
 ```
 
 ### Step 4: Extract data from text
 
 ```{r, echo = `FALSE`}
-# Reorder articles based on evaluations
+# Set order of evaluations
 wos$include <- factor(as.factor(wos$include),
                       levels = c("yes", "prob yes","maybe", "prob no", "no"))
 
-# Assign new article id based on evaluations
+# Reorder articles based on evaluations
 wos <- wos %>%
-  .[order(.$include),] %>%
-  mutate(id = row_number())
+  .[order(.$include),]
 
-# Priority #1: Yes
+###########################################
+# Priority #1: "yes" and "prob yes"
 wos.yes <- wos %>%
-  filter(include == "yes")
+  filter(include == "yes" | include == "prob yes")
 
-########################################### 
-# Schadler et al. 2010
-wos.yes[1, c("title", "year", "authors")]
+# Silvicultural Experiments for A-Value Controlled Single Tree Release of Future Trees
 
+
+
+ma.search(wos.yes, 17)
 ```
 
+```{r, echo = `FALSE`}
+###########################################
+# Schadler2010
+# Extract
+# Fig. 1
+
+###########################################
+# Vogt2010
+# Extract
+# Fig3a, Fig3b
+# Log ratio response and raw response, have raw response in Fig3 extracted
+
+###########################################
+# Grey2011
+# Extract
+# Fig5, maybe pop growth rates, con + hetero or none though
+
+###########################################
+# Santos2012
+# Extracted Fig2a, Fig2b
+
+###########################################
+# Marino2013
+# Extracted Fig2a, Fig2b
+
+###########################################
+# Nilsson2014
+# Check about transformations, weird stats presented
+
+###########################################
+# Shah2014
+# Check about transformations for Relative Interaction Intensity for Figs 1 and 2
+
+###########################################
+# Bontrager2014
+# Extracted fig 1 and 5, think about including time series
+
+###########################################
+# Martinez2015
+# Extract figure 2
+
+###########################################
+# Kenison2016
+# Extract figure 2, think about time series
+
+###########################################
+# Parepa2016
+# Missing stats, just model, it seems
+
+###########################################
+# Suraci2017
+# Maybe fig 2
+
+###########################################
+# Nobbs2017
+# Can prob extract figs
+
+###########################################
+# Dong2018
+# Check, MA of CO2 with some AMF
+
+###########################################
+# Ramirez2018
+# Check, MA of AMF
+
+###########################################
+# Welk2019
+# Extract from fig 1 
+
+###########################################
+# Welk2019
+# Extract from fig 1 
+
+###########################################
+
+#wos.yes[17, c("title", "year", "authors", "id")]
+
+
+#
+#colnames(wos.yes)
+#str(es)
+#ma.es
+
+## Create empty df to store effect sizes
+#es <- data.frame(id            = as.character(NA),
+#                 year          = as.character(NA),
+#                 title         = as.character(NA),
+#                 authors       = as.character(NA),
+#                 journal       = as.character(NA),
+#                 book          = as.character(NA),
+#                 abstract      = as.character(NA),
+#                 include       = as.character(NA),
+#                 comment       = as.character(NA),
+#                 es.id         = as.character(NA),
+#                 focal.species = as.character(NA),
+#                 focal.n       = as.character(NA),
+#                 focal.density = as.character(NA),
+#                 focal.size    = as.character(NA),
+#                 mut.species   = as.character(NA),
+#                 mut.n         = as.character(NA),
+#                 mut.density   = as.character(NA),
+#                 mut.size      = as.character(NA),
+#                 comp.species  = as.character(NA), 
+#                 comp.n        = as.character(NA),
+#                 comp.density  = as.character(NA),
+#                 comp.size     = as.character(NA),
+#                 pred.species  = as.character(NA), 
+#                 pred.n        = as.character(NA),  
+#                 pred.density  = as.character(NA),
+#                 pred.size     = as.character(NA),
+#                 interaction   = as.character(NA),   
+#                 trait         = as.character(NA),         
+#                 treatment     = as.character(NA),
+#                 location      = as.character(NA),      
+#                 measure       = as.character(NA),       
+#                 direction     = as.character(NA),
+#                 es            = as.character(NA),
+#                 se            = as.character(NA),
+#                 var           = as.character(NA),
+#                 ci.lo         = as.character(NA),
+#                 ci.hi         = as.character(NA),
+#                 w             = as.character(NA))
+
+```
 
 ### Step 5: Extract data from figures
 
@@ -1021,31 +1154,37 @@ filenames <- filenames[!filenames %in% grep(paste0("caldat"),
 # File names and article ids
 filenames <- data.frame(filename   = as.factor(all_of(filenames)),
                         article.id = c(
-                          # Bontrager 2014
+                          # Bontrager2014
                           c(rep(226, 5)),
-                          # Kenison 2016,
+                          # Grey2011
+                          #c(rep(XXX, XXX)),
+                          # Kenison2016,
                           c(rep(314, 6)),
-                          # Marino 2013
+                          # Marino2013
                           c(rep(174, 2)),
-                          # Martinez 2015
+                          # Martinez2015
                           c(rep(259, 3)),
-                          # Nilsson 2014
+                          # Nilsson2014
                           #c(rep(190, 1)),
-                          # Peptipas 2014
+                          # Petipas2014
                           c(rep(225, 1)),
-                          # Santos 2012
+                          # Santos2012
                           c(rep(105, 2)),
-                          # Schadler 2010
+                          # Schadler2010
                           c(rep(4, 1)),
-                          # Segre 2013
+                          # Segre2013
                           c(rep(189, 4)),
-                          # Vogt 2010
-                          c(rep(39, 2))))
+                          # Shah2014
+                          #c(rep(191, 4)),
+                          # Vogt2010
+                          c(rep(39, 2)),
+                          # Welk2019
+                          c(rep(520, 8))))
 
 # Extract figure data
 fig.data <- metaDigitise("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/new_figs")
-
-# Options to import all data
+ 
+# Options to continue to data entry
 2
 1
 
@@ -1054,7 +1193,7 @@ fig.data <- fig.data %>%
   full_join(., filenames, by = c("filename")) %>%
   mutate(group_id = as.character(group_id))
 
-# Split identifying information (group_id)
+# Split identifying information into separate columns
 fig.detail <- strsplit(fig.data$group_id,',', fixed = FALSE)
 
 # Convert list to df
@@ -1069,10 +1208,13 @@ for(i in 1:ncol(fig.detail)){
   colnames(fig.detail)[i] <- c(paste0("group.", i))
 }
 
-# Add separated details
+# Add details
 fig.data <- fig.data %>%
   cbind(., fig.detail) %>%
   mutate(group_id = NULL)
+
+# Remove details
+rm(filenames, fig.detail, i)
 ```
 
 # Bontrager 2014
@@ -1644,59 +1786,57 @@ fig.data.1 <- fig.data %>%
   # Replace any missing values (Inf) with NAs
   mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
 
-# Marino2013_Fig1b.png
-fig.data.2 <- fig.data %>%
-  filter(filename == "Marino2013_Fig1b.png") %>%
-  dplyr::rowwise() %>%
-  mutate(
-    ### Control
-    # n
-    n.c    = ifelse(group.1 == "Green frog larvae" && group.2 == "no predator" && group.3 == "no parasite", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Green frog larvae" && group.2 == "no predator" && group.3 == "no parasite", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Green frog larvae" && group.2 == "no predator" && group.3 == "no parasite", sd, NA),
-    ### Experimental
-    # n
-    n.e    = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", n, NA),
-    # mean
-    mean.e = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", mean, NA),
-    # sd
-    sd.e   = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", sd, NA)) %>%
-  mutate(
-    # Remove old stats columns
-    mean       = NULL,
-    sd         = NULL,
-    n          = NULL,
-    r          = NULL,
-    se         = NULL,
-    error_type = NULL,
-    plot_type  = NULL) %>%
-  # Merge control and experimental rows
-  group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
-                   mean.c  = max(mean.c, na.rm = TRUE),
-                   sd.c    = max(sd.c, na.rm = TRUE),
-                   n.e     = max(n.e, na.rm = TRUE),
-                   mean.e  = max(mean.e, na.rm = TRUE),
-                   sd.e    = max(sd.e, na.rm = TRUE),
-                   group.2 = "Anax",
-                   group.3 = as.character(NA),
-                   group.4 = as.character(NA)) %>%
-  # Replace any missing values (Inf) with NAs
-  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+## Marino2013_Fig1b.png
+#fig.data.2 <- fig.data %>%
+#  filter(filename == "Marino2013_Fig1b.png") %>%
+#  dplyr::rowwise() %>%
+#  mutate(
+#    ### Control
+#    # n
+#    n.c    = ifelse(group.1 == "Green frog larvae" && group.2 == "caged predator" && group.3 == "no parasite", n, NA),
+#    # mean
+#    mean.c = ifelse(group.1 == "Green frog larvae" && group.2 == "caged predator" && group.3 == "no parasite", mean, NA),
+#    # sd
+#    sd.c   = ifelse(group.1 == "Green frog larvae" && group.2 == "caged predator" && group.3 == "no parasite", sd, NA),
+#    ### Experimental
+#    # n
+#    n.e    = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", n, NA),
+#    # mean
+#    mean.e = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", mean, NA),
+#    # sd
+#    sd.e   = ifelse(group.1 == "Green frog larvae" && group.2 == "free predator" && group.3 == "no parasite", sd, NA)) %>%
+#  mutate(
+#    # Remove old stats columns
+#    mean       = NULL,
+#    sd         = NULL,
+#    n          = NULL,
+#    r          = NULL,
+#    se         = NULL,
+#    error_type = NULL,
+#    plot_type  = NULL) %>%
+#  # Merge control and experimental rows
+#  group_by(filename, variable, article.id, group.1) %>%
+#  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+#                   mean.c  = max(mean.c, na.rm = TRUE),
+#                   sd.c    = max(sd.c, na.rm = TRUE),
+#                   n.e     = max(n.e, na.rm = TRUE),
+#                   mean.e  = max(mean.e, na.rm = TRUE),
+#                   sd.e    = max(sd.e, na.rm = TRUE),
+#                   group.2 = "Anax",
+#                   group.3 = as.character(NA),
+#                   group.4 = as.character(NA)) %>%
+#  # Replace any missing values (Inf) with NAs
+#  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
 
 # Combine fig.data
 working.fig.data <- working.fig.data %>%
-  full_join(., fig.data.1) %>%
-  full_join(., fig.data.2)
+  full_join(., fig.data.1)
 
 # Remove objects
-rm(fig.data.1, fig.data.2)
+rm(fig.data.1)
 ```
 
 # Martinez 2015
-### need to fix diff groups here, locations not working or some shit
 
 ```{r, echo = FALSE}
 # Martinez2015_Fig2a.png
@@ -1707,48 +1847,141 @@ fig.data.1 <- fig.data %>%
     ### Control
     # n
     n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", n, NA),
-     # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
-     n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
     # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", mean, mean.c),
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", mean, NA),
     # sd
     sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", sd, NA),
-    # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),    
     ### Experimental
     # n
     n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", n, NA),
     # mean
     mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", mean, NA),
     # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", sd, NA),
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Croajingolong") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "open pollination",
+                   group.4 = "Croajingolong") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2a.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
+    ### Experimental
     # n
     n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", n, NA),
     # mean
     mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", mean, NA),
     # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA),
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Grampians") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "open pollination",
+                   group.4 = "Grampians") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2a.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
+    ### Experimental
+    # n
     n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", n, NA),
     # mean
     mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", mean, NA),
     # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA),
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Brisbane Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "open pollination",
+                   group.4 = "Brisbane Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2a.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),
+    ### Experimental
+    # n
     n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", n, NA),
     # mean
     mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", mean, NA),
@@ -1762,46 +1995,52 @@ fig.data.1 <- fig.data %>%
     r          = NULL,
     se         = NULL,
     error_type = NULL,
-    plot_type  = NULL)
-
-
-
-    # Remove old group columns
-    group.2    = NULL,
-    group.3    = NULL,
-    group.4    = NULL) %>%
+    plot_type  = NULL) %>%
+  filter(group.4 == "Dandenong Ranges") %>%
   # Merge control and experimental rows
   group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c    = max(n.c, na.rm = TRUE),
-                   mean.c = max(mean.c, na.rm = TRUE),
-                   sd.c   = max(sd.c, na.rm = TRUE),
-                   n.e    = max(n.e, na.rm = TRUE),
-                   mean.e = max(mean.e, na.rm = TRUE),
-                   sd.e   = max(sd.e, na.rm = TRUE)) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "open pollination",
+                   group.4 = "Dandenong Ranges") %>%
   # Replace any missing values (Inf) with NAs
   mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
 
-# Martinez2015_Fig2b.png
-fig.data.2 <- fig.data %>%
-  filter(filename == "Martinez2015_Fig2b.png")
 
-%>%
+# Combine fig.data
+working.fig.data <- rbind(working.fig.data,
+                          fig.data.1, fig.data.2,
+                          fig.data.3, fig.data.4)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
+```
+
+```{r, echo = FALSE}
+# Martinez2015_Fig2b.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2b.png") %>%
   dplyr::rowwise() %>%
   mutate(
     ### Control
     # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant", n, NA),
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", n, NA),
     # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant", mean, NA),
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", mean, NA),
     # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant", sd, NA),
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", sd, NA),
     ### Experimental
     # n
-    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant", n, NA),
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", n, NA),
     # mean
-    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant", mean, NA),
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", mean, NA),
     # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant", sd, NA)) %>%
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", sd, NA)) %>%
   mutate(
     # Remove old stats columns
     mean       = NULL,
@@ -1810,28 +2049,531 @@ fig.data.2 <- fig.data %>%
     r          = NULL,
     se         = NULL,
     error_type = NULL,
-    plot_type  = NULL,
-    # Remove old group columns
-    group.2    = NULL,
-    group.3    = NULL,
-    group.4    = NULL) %>%
+    plot_type  = NULL) %>%
+  filter(group.4 == "Croajingolong") %>%
   # Merge control and experimental rows
   group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c    = max(n.c, na.rm = TRUE),
-                   mean.c = max(mean.c, na.rm = TRUE),
-                   sd.c   = max(sd.c, na.rm = TRUE),
-                   n.e    = max(n.e, na.rm = TRUE),
-                   mean.e = max(mean.e, na.rm = TRUE),
-                   sd.e   = max(sd.e, na.rm = TRUE)) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "all pollination exclusion",
+                   group.4 = "Croajingolong") %>%
   # Replace any missing values (Inf) with NAs
   mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
 
+# Martinez2015_Fig2b.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Grampians") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "all pollination exclusion",
+                   group.4 = "Grampians") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2b.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Brisbane Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "all pollination exclusion",
+                   group.4 = "Brisbane Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2b.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Dandenong Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "all pollination exclusion",
+                   group.4 = "Dandenong Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+
 # Combine fig.data
 working.fig.data <- rbind(working.fig.data,
-                          fig.data.1, fig.data.2)
+                          fig.data.1, fig.data.2,
+                          fig.data.3, fig.data.4)
 
 # Remove objects
-rm(fig.data.1, fig.data.2)
+rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
+```
+
+```{r, echo = FALSE}
+# Martinez2015_Fig2c.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Croajingolong", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Croajingolong", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Croajingolong") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Croajingolong") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2c.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Grampians") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Grampians") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2c.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Brisbane Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Brisbane Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2c.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Dandenong Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Dandenong Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+
+# Combine fig.data
+working.fig.data <- rbind(working.fig.data,
+                          fig.data.1, fig.data.2,
+                          fig.data.3, fig.data.4)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
+```
+
+# Petipas 2014
+```{r, echo = FALSE}
+# Petipas2014_Fig1
+fig.data.1 <- fig.data %>%
+  filter(filename == "Petipas2014_Fig1.png")
+
+%>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.1 == "AMF richness" && group.2 == "off termite mound") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = group.2,
+                   group.3 = group.3,
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+
+
+
+# Martinez2015_Fig2c.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Grampians") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Grampians") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2c.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Brisbane Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Brisbane Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Martinez2015_Fig2c.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Martinez2015_Fig2c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  filter(group.4 == "Dandenong Ranges") %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "ant",
+                   group.3 = "large pollination exclusion",
+                   group.4 = "Dandenong Ranges") %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+
+# Combine fig.data
+working.fig.data <- rbind(working.fig.data,
+                          fig.data.1, fig.data.2,
+                          fig.data.3, fig.data.4)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
 ```
 
 ### Step 5: Quick plots
