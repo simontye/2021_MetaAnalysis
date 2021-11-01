@@ -1,7 +1,7 @@
 ---
 title: "synthesis"
 author: "SPT"
-date: "2021_10_30"
+date: "2021_11_01"
 output: github_document
 ---
 
@@ -11,7 +11,8 @@ output: github_document
 # Install packages
 #devtools::install_github("MathiasHarrer/dmetar")
 #devtools::install_github("daniel1noble/metaDigitise")
-#install.packages("searcher")
+#install.packages("devtools")
+#install.packages("cli")
 
 # Load packages
 library(tidyverse)
@@ -1007,12 +1008,6 @@ wos <- wos %>%
 # Priority #1: "yes" and "prob yes"
 wos.yes <- wos %>%
   filter(include == "yes" | include == "prob yes")
-
-# Silvicultural Experiments for A-Value Controlled Single Tree Release of Future Trees
-
-
-
-ma.search(wos.yes, 17)
 ```
 
 ```{r, echo = `FALSE`}
@@ -1144,7 +1139,7 @@ ma.search(wos.yes, 17)
 
 ```{r, echo = FALSE}
 # Save file names
-filenames <- list.files("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/new_figs")
+filenames <- list.files("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/figs_new")
 
 # Exclude metaDigitise folder
 filenames <- filenames[!filenames %in% grep(paste0("caldat"),
@@ -1154,39 +1149,83 @@ filenames <- filenames[!filenames %in% grep(paste0("caldat"),
 # File names and article ids
 filenames <- data.frame(filename   = as.factor(all_of(filenames)),
                         article.id = c(
+                          # Aristov2015
+                          #c(rep(235, 1)),
+                          # Barton2014
+                          #c(rep(193, 1)),
                           # Bontrager2014
                           c(rep(226, 5)),
+                          # Burkle2015
+                          c(rep(272, 3)),
+                          # Cipriotti2010
+                          c(rep(35, 2)),
+                          # Corli2019
+                          c(rep(499, 1)),
+                          # Gibb2011a
+                          c(rep(64, 1)),
+                          # Gibb2011b
+                          c(rep(65, 1)),
+                          # Gonzalez2018
+                          c(rep(440, 3)),
+                          # Grass2018
+                          c(rep(442, 2)),
                           # Grey2011
                           #c(rep(XXX, XXX)),
+                          # Gundale2012
+                          c(rep(115, 2)),
+                          # Guo2012
+                          c(rep(114, 2)),  
+                          # He2021
+                          c(rep(653, 4)),
+                          # Jackson2016
+                          c(rep(295, 1)),
                           # Kenison2016,
                           c(rep(314, 6)),
+                          # Leps2018
+                          c(rep(487, 2)),
                           # Marino2013
                           c(rep(174, 2)),
                           # Martinez2015
                           c(rep(259, 3)),
                           # Nilsson2014
                           #c(rep(190, 1)),
+                          # Overly2015
+                          c(rep(271, 4)),
+                          # Partzsch2017
+                          c(rep(468, 2)),
                           # Petipas2014
                           c(rep(225, 1)),
+                          # Pizaco2011
+                          c(rep(46, 1)),
+                          # Raak2017
+                          c(rep(450, 2)),
                           # Santos2012
                           c(rep(105, 2)),
                           # Schadler2010
                           c(rep(4, 1)),
+                          # Schulze2012
+                          c(rep(99, 2)),
                           # Segre2013
                           c(rep(189, 4)),
                           # Shah2014
                           #c(rep(191, 4)),
+                          # Trekels2013
+                          c(rep(157, 3)),
+                          # Tremlett2019
+                          c(rep(598, 1)),
+                          # VanDerNiet2015
+                          c(rep(249, 1)),
                           # Vogt2010
                           c(rep(39, 2)),
                           # Welk2019
                           c(rep(520, 8))))
 
 # Extract figure data
-fig.data <- metaDigitise("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/new_figs")
- 
+fig.data <- metaDigitise("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/figs_new")
+
 # Options to continue to data entry
-2
-1
+#2
+#1
 
 # Join WoS and figure data
 fig.data <- fig.data %>%
