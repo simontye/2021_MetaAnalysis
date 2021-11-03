@@ -1,7 +1,7 @@
 ---
 title: "synthesis"
 author: "SPT"
-date: "2021_11_01"
+date: "2021_11_02"
 output: github_document
 ---
 
@@ -35,6 +35,16 @@ wos.comp <- read.csv(file = "data/papers/wos_comp.csv",  head = TRUE, sep = ",")
 wos.pred <- read.csv(file = "data/papers/wos_pred.csv", head = TRUE, sep = ",")
 wos.mut  <- read.csv(file = "data/papers/wos_mutual.csv", head = TRUE, sep = ",")
 chamber  <- read.csv(file = "data/papers/chamberlain.csv", head = TRUE, sep = ",")
+
+# Plot theme
+pretty <- theme_classic(base_size = 10) +
+  theme(axis.title.y      = element_text(margin = margin(r = 10)),
+        axis.title.x      = element_text(margin = margin(t = 10)), 
+        axis.text         = element_text(color = "black"), 
+        axis.ticks        = element_line(color = "black"),
+        axis.ticks.length = unit(.25, "cm"), 
+        legend.key.size   = unit(1.5,  'lines'),
+        legend.position   = "right")
 ```
 
 ```{r, echo = `FALSE`}
@@ -1160,29 +1170,29 @@ filenames <- data.frame(filename   = as.factor(all_of(filenames)),
                           # Cipriotti2010
                           c(rep(35, 2)),
                           # Corli2019
-                          c(rep(499, 1)),
+                          c(rep(499, 2)),
                           # Gibb2011a
-                          c(rep(64, 1)),
+                          #c(rep(64, 1)),
                           # Gibb2011b
-                          c(rep(65, 1)),
+                          #c(rep(65, 1)),
                           # Gonzalez2018
-                          c(rep(440, 3)),
+                          #c(rep(440, 3)),
                           # Grass2018
-                          c(rep(442, 2)),
+                          c(rep(442, 3)),
                           # Grey2011
                           #c(rep(XXX, XXX)),
                           # Gundale2012
-                          c(rep(115, 2)),
+                          c(rep(115, 5)),
                           # Guo2012
-                          c(rep(114, 2)),  
+                          c(rep(114, 17)),  
                           # He2021
-                          c(rep(653, 4)),
+                          #c(rep(653, 4)),
                           # Jackson2016
                           c(rep(295, 1)),
                           # Kenison2016,
                           c(rep(314, 6)),
                           # Leps2018
-                          c(rep(487, 2)),
+                          c(rep(487, 1)),
                           # Marino2013
                           c(rep(174, 2)),
                           # Martinez2015
@@ -1220,12 +1230,14 @@ filenames <- data.frame(filename   = as.factor(all_of(filenames)),
                           # Welk2019
                           c(rep(520, 8))))
 
+####################### Complete to Overby2015
+
 # Extract figure data
 fig.data <- metaDigitise("/Users/simontye/Research/Projects/Meta_Analysis/2021_MetaAnalysis/papers/figs_new")
 
 # Options to continue to data entry
-#2
-#1
+2
+1
 
 # Join WoS and figure data
 fig.data <- fig.data %>%
@@ -1241,7 +1253,7 @@ fig.detail <- fig.detail %>%
   # Remove trailing/leading spaces
   mutate(across(where(is.character), str_trim))
 
-# Rename columns (group_#)
+# Rename details columns (group_#)
 for(i in 1:ncol(fig.detail)){
   # Isolate column
   colnames(fig.detail)[i] <- c(paste0("group.", i))
@@ -1509,6 +1521,1734 @@ working.fig.data <- fig.data.1 %>%
 # Remove objects
 rm(fig.data.1, fig.data.2, fig.data.3,
    fig.data.4, fig.data.5)
+```
+
+# Burkle 2015
+
+```{r, echo = `FALSE`}
+# Burkle2015_Fig1a.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Burkle2015_Fig1a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", n, NA),
+    n.c    = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", n, n.c),
+    n.c    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", mean, NA),
+    mean.c = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", mean, mean.c),
+    mean.c = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", sd, NA),
+    sd.c   = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", n, NA),
+    n.e    = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", n, n.e),
+    n.e    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", mean, NA),
+    mean.e = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", mean, mean.e),
+    mean.e = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", sd, NA),
+    sd.e   = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", sd, sd.e)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "myco",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Burkle2015_Fig1b.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Burkle2015_Fig1b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", n, NA),
+    n.c    = ifelse(group.1 == "B marginatus"       && group.2 == "w/o myco", n, n.c),
+    n.c    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", mean, NA),
+    mean.c = ifelse(group.1 == "B marginatus"       && group.2 == "w/o myco", mean, mean.c),
+    mean.c = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", sd, NA),
+    sd.c   = ifelse(group.1 == "B marginatus"       && group.2 == "w/o myco", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", n, NA),
+    n.e    = ifelse(group.1 == "B marginatus"       && group.2 == "w/ myco", n, n.e),
+    n.e    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", mean, NA),
+    mean.e = ifelse(group.1 == "B marginatus"       && group.2 == "w/ myco", mean, mean.e),
+    mean.e = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", sd, NA),
+    sd.e   = ifelse(group.1 == "B marginatus"       && group.2 == "w/ myco", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", sd, sd.e)) %>%
+  # Fix species name
+  mutate(group.1 = ifelse(group.1 == "B marginatus", "Bromus marginatus", group.1)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "myco",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Burkle2015_Fig1c.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Burkle2015_Fig1c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", n, NA),
+    n.c    = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", n, n.c),
+    n.c    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", mean, NA),
+    mean.c = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", mean, mean.c),
+    mean.c = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/o myco", sd, NA),
+    sd.c   = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/o myco", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/o myco", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", n, NA),
+    n.e    = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", n, n.e),
+    n.e    = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", mean, NA),
+    mean.e = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", mean, mean.e),
+    mean.e = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Linum lewisii"      && group.2 == "w/ myco", sd, NA),
+    sd.e   = ifelse(group.1 == "Bromus marginatus"  && group.2 == "w/ myco", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Dactylis glomerata" && group.2 == "w/ myco", sd, sd.e)) %>%
+  # Fix species name
+  mutate(group.1 = ifelse(group.1 == "B marginatus", "Bromus marginatus", group.1)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "myco",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2) %>%
+  full_join(., fig.data.3)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3)
+```
+
+# Cipriotti 2010
+
+```{r, echo = `FALSE`}
+# Cipriotti2010_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Cipriotti2010_Fig1.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", n, NA),
+    n.c    = ifelse(group.1 == "Senecio filaginoides" && group.2 == "grass removal", n, n.c),
+    n.c    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", mean, NA),
+    mean.c = ifelse(group.1 == "Senecio filaginoides" && group.2 == "grass removal", mean, mean.c),
+    mean.c = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", sd, NA),
+    sd.c   = ifelse(group.1 == "Senecio filaginoides" && group.2 == "grass removal", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", n, NA),
+    n.e    = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", n, n.e),
+    n.e    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", mean, NA),
+    mean.e = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", mean, mean.e),
+    mean.e = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", sd, NA),
+    sd.e   = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", sd, sd.e)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Cipriotti2010_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Cipriotti2010_Fig1.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", n, NA),
+    n.c    = ifelse(group.1 == "Senecio filaginoides" && group.2 == "shrub removal", n, n.c),
+    n.c    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", mean, NA),
+    mean.c = ifelse(group.1 == "Senecio filaginoides" && group.2 == "shrub removal", mean, mean.c),
+    mean.c = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", sd, NA),
+    sd.c   = ifelse(group.1 == "Senecio filaginoides" && group.2 == "shrub removal", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", n, NA),
+    n.e    = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", n, n.e),
+    n.e    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", mean, NA),
+    mean.e = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", mean, mean.e),
+    mean.e = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", sd, NA),
+    sd.e   = ifelse(group.1 == "Senecio filaginoides" && group.2 == "control", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", sd, sd.e)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "shrub",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Cipriotti2010_Fig3.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Cipriotti2010_Fig3.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", n, NA),
+    n.c    = ifelse(group.1 == "Senecio" && group.3 == "grass removal", n, n.c),
+    n.c    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", mean, NA),
+    mean.c = ifelse(group.1 == "Senecio" && group.3 == "grass removal", mean, mean.c),
+    mean.c = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "grass removal", sd, NA),
+    sd.c   = ifelse(group.1 == "Senecio" && group.3 == "grass removal", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "grass removal", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", n, NA),
+    n.e    = ifelse(group.1 == "Senecio" && group.3 == "control", n, n.e),
+    n.e    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", mean, NA),
+    mean.e = ifelse(group.1 == "Senecio" && group.3 == "control", mean, mean.e),
+    mean.e = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", sd, NA),
+    sd.e   = ifelse(group.1 == "Senecio" && group.3 == "control", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", sd, sd.e)) %>%
+  mutate(group.1 = ifelse(group.1 == "Senecio", "Senecio filaginoides", group.1)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Cipriotti2010_Fig3.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Cipriotti2010_Fig3.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", n, NA),
+    n.c    = ifelse(group.1 == "Senecio" && group.3 == "shrub removal", n, n.c),
+    n.c    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", n, n.c),
+    # mean
+    mean.c = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", mean, NA),
+    mean.c = ifelse(group.1 == "Senecio" && group.3 == "shrub removal", mean, mean.c),
+    mean.c = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", mean, mean.c),
+    # sd
+    sd.c   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "shrub removal", sd, NA),
+    sd.c   = ifelse(group.1 == "Senecio" && group.3 == "shrub removal", sd, sd.c),
+    sd.c   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "shrub removal", sd, sd.c),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", n, NA),
+    n.e    = ifelse(group.1 == "Senecio" && group.3 == "control", n, n.e),
+    n.e    = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", n, n.e),
+    # mean
+    mean.e = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", mean, NA),
+    mean.e = ifelse(group.1 == "Senecio" && group.3 == "control", mean, mean.e),
+    mean.e = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", mean, mean.e),
+    # sd
+    sd.e   = ifelse(group.1 == "Mulinum spinosum"     && group.2 == "control", sd, NA),
+    sd.e   = ifelse(group.1 == "Senecio" && group.3 == "control", sd, sd.e),
+    sd.e   = ifelse(group.1 == "Adesmia volckmanni"   && group.2 == "control", sd, sd.e)) %>%
+  mutate(group.1 = ifelse(group.1 == "Senecio", "Senecio filaginoides", group.1)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = "shrub",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2) %>%
+  full_join(., fig.data.3) %>%
+  full_join(., fig.data.4)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3,
+   fig.data.4)
+```
+
+# Corli 2019
+
+```{r, echo = `FALSE`}
+# Corli2019_Fig3a.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Corli2019_Fig3a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "without pollinators", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "without pollinators", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "without pollinators", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "with pollinators", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "with pollinators", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "with pollinators", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "ten species",
+                   group.2 = "pollinators",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Corli2019_Fig3b.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Corli2019_Fig3b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "without pollinators", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "without pollinators", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "without pollinators", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "with pollinators", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "with pollinators", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "with pollinators", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "ten species",
+                   group.2 = "pollinators",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Grass 2018
+
+```{r, echo = `FALSE`}
+# Grass2018_Fig3a.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Grass2018_Fig3a.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "pollinator exclusion", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "pollinator exclusion", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "pollinator exclusion", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "untreated", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "untreated", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "untreated", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Sinapis arvensis",
+                   group.2 = "pollinators",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Grass2018_Fig3b.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Grass2018_Fig3b.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "pollinator exclusion", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "pollinator exclusion", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "pollinator exclusion", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "untreated", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "untreated", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "untreated", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Sinapis arvensis",
+                   group.2 = "pollinators",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Grass2018_Fig3c.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Grass2018_Fig3c.png") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "pollinator exclusion", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "pollinator exclusion", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "pollinator exclusion", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.1 == "untreated", n, NA),
+    # mean
+    mean.e = ifelse(group.1 == "untreated", mean, NA),
+    # sd
+    sd.e   = ifelse(group.1 == "untreated", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Sinapis arvensis",
+                   group.2 = "pollinators",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2) %>%
+  full_join(., fig.data.3)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3)
+```
+
+# Gundale 2012
+
+```{r, echo = `FALSE`}
+# Gundale2012_Fig2a.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitisidaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitisidaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2a.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitisidaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitisidaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2a.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitisidaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitisidaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitisidaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitisidaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2a.png
+fig.data.4 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditum", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditum", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2a.png
+fig.data.5 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditum", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditum", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2a.png
+fig.data.6 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2a.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditum", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditum", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditum", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditum", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.7 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.8 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.9 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.10 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditums", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditums", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.11 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditums", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditums", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2b.png
+fig.data.12 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2b.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Empetrum hermaphroditums", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Empetrum hermaphroditums", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Empetrum hermaphroditums", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Empetrum hermaphroditums", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "Empetrum hermaphroditum",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2c.png
+fig.data.13 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2c.png
+fig.data.14 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2c.png
+fig.data.15 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium myrtillus", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium myrtillus", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium myrtillus", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium myrtillus", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium myrtillus", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium myrtillus",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+
+# Gundale2012_Fig2c.png
+fig.data.16 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "small") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitis-idaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitis-idaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "small",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2c.png
+fig.data.17 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "medium") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitis-idaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitis-idaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "medium",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig2c.png
+fig.data.18 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig2c.png") %>%
+  filter(group.3 == "large") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o Vaccinium vitis-idaea", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ Vaccinium vitis-idaea", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ Vaccinium vitis-idaea", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ Vaccinium vitis-idaea", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "Vaccinium vitis-idaea",
+                   group.3 = "large",
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2) %>%
+  full_join(., fig.data.3) %>%
+  full_join(., fig.data.4) %>%
+  full_join(., fig.data.5) %>%
+  full_join(., fig.data.6) %>%
+  full_join(., fig.data.7) %>%
+  full_join(., fig.data.8) %>%
+  full_join(., fig.data.9) %>%
+  full_join(., fig.data.10) %>%
+  full_join(., fig.data.11) %>%
+  full_join(., fig.data.12) %>%
+  full_join(., fig.data.13) %>%
+  full_join(., fig.data.14) %>%
+  full_join(., fig.data.15) %>%
+  full_join(., fig.data.16) %>%
+  full_join(., fig.data.17) %>%
+  full_join(., fig.data.18)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3,
+   fig.data.4, fig.data.5, fig.data.6,
+   fig.data.7, fig.data.8, fig.data.9,
+   fig.data.10, fig.data.11, fig.data.12,
+   fig.data.13, fig.data.14, fig.data.15,
+   fig.data.16, fig.data.17, fig.data.18)
+
+# Gundale2012_Fig3a.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig3a.png") %>%
+  filter(group.1 == "Vaccinium myrtillus") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o tree roots", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o tree roots", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o tree roots", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ tree roots", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ tree roots", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ tree roots", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium myrtillus",
+                   group.2 = "tree roots",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig3a.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig3a.png") %>%
+  filter(group.1 == "Vaccinium vitis-idaea") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o tree roots", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o tree roots", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o tree roots", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ tree roots", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ tree roots", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ tree roots", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Vaccinium vitis-idaea",
+                   group.2 = "tree roots",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Gundale2012_Fig3a.png
+fig.data.3 <- fig.data %>%
+  filter(filename == "Gundale2012_Fig3a.png") %>%
+  filter(group.1 == "Empetrum hermaphroditum") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o tree roots", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o tree roots", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o tree roots", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ tree roots", n, NA),
+    # mean
+    mean.e = ifelse(group.2 == "w/ tree roots", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ tree roots", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "Empetrum hermaphroditum",
+                   group.2 = "tree roots",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2) %>%
+  full_join(., fig.data.3)
+
+# Remove objects
+rm(fig.data.1, fig.data.2, fig.data.3)
+```
+
+# Guo 2012
+
+```{r, echo = `FALSE`}
+# Guo2012_Fig3a_short.png
+fig.data.1 <- fig.data %>%
+  filter(grepl("Guo2012_Fig3", filename)) %>%
+  group_by(group.1, group.3) %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o neighbor", n, 4),
+    # mean
+    mean.c = ifelse(group.2 == "w/o neighbor", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o neighbor", sd, (se * sqrt(4))),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ neighbor", n, 4),
+    # mean
+    mean.e = ifelse(group.2 == "w/ neighbor", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ neighbor", sd, (se * sqrt(4)))) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(variable, article.id, group.1, group.3) %>%
+  dplyr::summarize(filename = "Guo2012.png",
+                   n.c      = max(n.c, na.rm = TRUE),
+                   mean.c   = max(mean.c, na.rm = TRUE),
+                   sd.c     = max(sd.c, na.rm = TRUE),
+                   n.e      = max(n.e, na.rm = TRUE),
+                   mean.e   = max(mean.e, na.rm = TRUE),
+                   sd.e     = max(sd.e, na.rm = TRUE),
+                   group.2  = "neighbor",
+                   group.4  = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1)
+
+# Remove objects
+rm(fig.data.1)
+```
+
+# Jackson 2016
+
+```{r, echo = `FALSE`}
+# Jackson2016_Fig4.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Jackson2016_Fig4.png") %>%
+  group_by(group.1) %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.2 == "w/o crayfish" | group.2 == "w/o crabs", n, NA),
+    # mean
+    mean.c = ifelse(group.2 == "w/o crayfish" | group.2 == "w/o crabs", mean, NA),
+    # sd
+    sd.c   = ifelse(group.2 == "w/o crayfish" | group.2 == "w/o crabs", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "w/ crayfish" | group.2 == "w/ crabs", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "w/ crayfish" | group.2 == "w/ crabs", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "w/ crayfish" | group.2 == "w/ crabs", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id, group.1) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.2 = ifelse(group.1 == "Crabs", "Crayfish", "Crabs"),
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1)
+
+# Remove objects
+rm(fig.data.1)
 ```
 
 # Kennison 2016
@@ -2426,717 +4166,184 @@ working.fig.data <- rbind(working.fig.data,
 rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
 ```
 
-# Petipas 2014
-```{r, echo = FALSE}
-# Petipas2014_Fig1
-fig.data.1 <- fig.data %>%
-  filter(filename == "Petipas2014_Fig1.png")
-
-%>%
-  dplyr::rowwise() %>%
-  mutate(
-    ### Control
-    # n
-    n.c    = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "fenced", sd, NA),
-    ### Experimental
-    # n
-    n.e    = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", n, NA),
-    # mean
-    mean.e = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", mean, NA),
-    # sd
-    sd.e   = ifelse(group.1 == "AMF richness" && group.2 == "off termite mound" && group.3 == "open", sd, NA)) %>%
-  mutate(
-    # Remove old stats columns
-    mean       = NULL,
-    sd         = NULL,
-    n          = NULL,
-    r          = NULL,
-    se         = NULL,
-    error_type = NULL,
-    plot_type  = NULL) %>%
-  filter(group.1 == "AMF richness" && group.2 == "off termite mound") %>%
-  # Merge control and experimental rows
-  group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
-                   mean.c  = max(mean.c, na.rm = TRUE),
-                   sd.c    = max(sd.c, na.rm = TRUE),
-                   n.e     = max(n.e, na.rm = TRUE),
-                   mean.e  = max(mean.e, na.rm = TRUE),
-                   sd.e    = max(sd.e, na.rm = TRUE),
-                   group.2 = group.2,
-                   group.3 = group.3,
-                   group.4 = as.character(NA)) %>%
-  # Replace any missing values (Inf) with NAs
-  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
-
-
-
-
-# Martinez2015_Fig2c.png
-fig.data.2 <- fig.data %>%
-  filter(filename == "Martinez2015_Fig2c.png") %>%
-  dplyr::rowwise() %>%
-  mutate(
-    ### Control
-    # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Grampians", sd, NA),
-    ### Experimental
-    # n
-    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", n, NA),
-    # mean
-    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", mean, NA),
-    # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Grampians", sd, NA)) %>%
-  mutate(
-    # Remove old stats columns
-    mean       = NULL,
-    sd         = NULL,
-    n          = NULL,
-    r          = NULL,
-    se         = NULL,
-    error_type = NULL,
-    plot_type  = NULL) %>%
-  filter(group.4 == "Grampians") %>%
-  # Merge control and experimental rows
-  group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
-                   mean.c  = max(mean.c, na.rm = TRUE),
-                   sd.c    = max(sd.c, na.rm = TRUE),
-                   n.e     = max(n.e, na.rm = TRUE),
-                   mean.e  = max(mean.e, na.rm = TRUE),
-                   sd.e    = max(sd.e, na.rm = TRUE),
-                   group.2 = "ant",
-                   group.3 = "large pollination exclusion",
-                   group.4 = "Grampians") %>%
-  # Replace any missing values (Inf) with NAs
-  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
-
-# Martinez2015_Fig2c.png
-fig.data.3 <- fig.data %>%
-  filter(filename == "Martinez2015_Fig2c.png") %>%
-  dplyr::rowwise() %>%
-  mutate(
-    ### Control
-    # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Brisbane Ranges", sd, NA),
-    ### Experimental
-    # n
-    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", n, NA),
-    # mean
-    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", mean, NA),
-    # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Brisbane Ranges", sd, NA)) %>%
-  mutate(
-    # Remove old stats columns
-    mean       = NULL,
-    sd         = NULL,
-    n          = NULL,
-    r          = NULL,
-    se         = NULL,
-    error_type = NULL,
-    plot_type  = NULL) %>%
-  filter(group.4 == "Brisbane Ranges") %>%
-  # Merge control and experimental rows
-  group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
-                   mean.c  = max(mean.c, na.rm = TRUE),
-                   sd.c    = max(sd.c, na.rm = TRUE),
-                   n.e     = max(n.e, na.rm = TRUE),
-                   mean.e  = max(mean.e, na.rm = TRUE),
-                   sd.e    = max(sd.e, na.rm = TRUE),
-                   group.2 = "ant",
-                   group.3 = "large pollination exclusion",
-                   group.4 = "Brisbane Ranges") %>%
-  # Replace any missing values (Inf) with NAs
-  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
-
-# Martinez2015_Fig2c.png
-fig.data.4 <- fig.data %>%
-  filter(filename == "Martinez2015_Fig2c.png") %>%
-  dplyr::rowwise() %>%
-  mutate(
-    ### Control
-    # n
-    n.c    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", n, NA),
-    # mean
-    mean.c = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", mean, NA),
-    # sd
-    sd.c   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "no ant" && group.4 == "Dandenong Ranges", sd, NA),
-    ### Experimental
-    # n
-    n.e    = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", n, NA),
-    # mean
-    mean.e = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", mean, NA),
-    # sd
-    sd.e   = ifelse(group.1 == "Acacia myrtifolia" && group.2 == "ant" && group.4 == "Dandenong Ranges", sd, NA)) %>%
-  mutate(
-    # Remove old stats columns
-    mean       = NULL,
-    sd         = NULL,
-    n          = NULL,
-    r          = NULL,
-    se         = NULL,
-    error_type = NULL,
-    plot_type  = NULL) %>%
-  filter(group.4 == "Dandenong Ranges") %>%
-  # Merge control and experimental rows
-  group_by(filename, variable, article.id, group.1) %>%
-  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
-                   mean.c  = max(mean.c, na.rm = TRUE),
-                   sd.c    = max(sd.c, na.rm = TRUE),
-                   n.e     = max(n.e, na.rm = TRUE),
-                   mean.e  = max(mean.e, na.rm = TRUE),
-                   sd.e    = max(sd.e, na.rm = TRUE),
-                   group.2 = "ant",
-                   group.3 = "large pollination exclusion",
-                   group.4 = "Dandenong Ranges") %>%
-  # Replace any missing values (Inf) with NAs
-  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x))
-
-
-# Combine fig.data
-working.fig.data <- rbind(working.fig.data,
-                          fig.data.1, fig.data.2,
-                          fig.data.3, fig.data.4)
-
-# Remove objects
-rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
-```
-
-### Step 5: Quick plots
+### Step 5: Figz
 
 ```{r, echo = `FALSE`}
-# Subset current data
-current <- es %>%
-  filter(!is.na(include)) %>%
-  filter(include == "yes") %>%
+# Calculate effect sizes (yi = es, vi = variance)
+es <- working.fig.data %>%
+  metafor::escalc(data = .,
+                  measure = "SMD",
+                  m1i  = mean.e,
+                  sd1i = sd.e,
+                  n1i  = n.e,
+                  m2i  = mean.c,
+                  sd2i = sd.c,
+                  n2i  = n.c) %>%
+  dplyr::rename(es     = yi,
+                es.var = vi) %>%
+  filter(!is.na(es))
+
+###### Categorize studies
+
+# Plant
+comp.plant <- c("Bontrager2014_Fig1.png", "Bontrager2014_Fig1.png",
+                "Bontrager2014_Fig1.png", "Bontrager2014_Fig5a.png",
+                "Bontrager2014_Fig5a.png", "Bontrager2014_Fig5b.png",
+                "Bontrager2014_Fig5b.png", "Bontrager2014_Fig5b.png",
+                "Bontrager2014_Fig5c.png", "Bontrager2014_Fig5d.png",
+                "Cipriotti2010_Fig1.png", "Cipriotti2010_Fig3.png",
+                "Gundale2012_Fig2a.png", "Gundale2012_Fig2b.png",
+                "Gundale2012_Fig2c.png", "Gundale2012_Fig3a.png",
+                "Guo2012.png")
+
+#######################
+### Competition
+
+# Plant/invert
+comp.plant.invert <- c("Corli2019_Fig3a.png", "Corli2019_Fig3b.png",
+                       "Grass2018_Fig3a.png", "Grass2018_Fig3b.png",
+                       "Grass2018_Fig3c.png")
+
+# Invert
+comp.invert <- c("Jackson2016_Fig4.png")
+
+#######################
+### Mutualism
+
+# Plant/fungi
+mut.plant.fungi <- c("Burkle2015_Fig1a.png", "Burkle2015_Fig1b.png",
+                     "Burkle2015_Fig1c.png")
+
+# Plant/invert
+mut.plant.invert <- c("Martinez2015_Fig2a.png", "Martinez2015_Fig2b.png",
+                      "Martinez2015_Fig2c.png")
+
+#######################
+### Predation
+
+# Herp/fish
+pred.herp.fish <- c("Kenison2016_Fig2a.png", "Kenison2016_Fig2b.png",
+                     "Kenison2016_Fig2c.png", "Kenison2016_Fig2d.png",
+                     "Kenison2016_Fig2e.png", "Kenison2016_Fig2f.png")
+
+# Invert/herp
+pred.invert.herp <-c("Marino2013_Fig1a.png")
+
+#######################
+# Categorize studies
+es <- es %>%
   mutate(
-    # Data
-    interaction = as.factor(interaction),
-    trait       = as.factor(trait),
-    # Effect sizes
-    es          = as.numeric(es),
-    es.se       = as.numeric(es.se),
-    es.var      = as.numeric(es.var),
-    es.ci.upper = as.numeric(es.ci.upper),
-    es.ci.lower = as.numeric(es.ci.lower),
-    es.w        = as.numeric(es.w)) #%>%
-  #filter(type == "comp" | type == "no_comp")
+    # Focal (first) organisms
+    organism.first  = ifelse(filename %in% all_of(c(comp.plant,
+                                                    mut.plant.fungi,
+                                                    comp.plant.invert,
+                                                    mut.plant.invert)),
+                             "plant",
+                             ifelse(filename %in% all_of(c(comp.invert,
+                                                           pred.invert.herp)),
+                                    "invert",
+                                    ifelse(filename %in% all_of(c(pred.herp.fish)),
+                                           "herp", NA))),
+    # Additive (second) organisms
+    organism.second = ifelse(filename %in% all_of(c(comp.plant)),
+                             "plant",
+                             ifelse(filename %in% all_of(c(mut.plant.fungi)),
+                                    "fungi",
+                                    ifelse(filename %in% all_of(c(comp.plant.invert,
+                                                                  comp.invert,
+                                                                  mut.plant.invert)),
+                                           "invert",
+                                           ifelse(filename %in% all_of(c(pred.invert.herp)),
+                                                  "herp",
+                                                  ifelse(filename %in% all_of(c(pred.herp.fish)),
+                                                         "fish", NA))))),
+    # Interaction
+    interaction     = ifelse(filename %in% all_of(c(comp.plant,
+                                                    comp.plant.invert,
+                                                    comp.invert)),
+                             "competition",
+                             ifelse(filename %in% all_of(c(mut.plant.fungi,
+                                                           mut.plant.invert)),
+                                    "mutualism",
+                                    ifelse(filename %in% all_of(c(pred.invert.herp,
+                                                                  pred.herp.fish)),
+                                           "predation", NA))))
 
-# Rename factors (filtered to comp only)
-#levels(current$type) <- list(Present  = "comp",
-#                             Absent   = "no_comp")
-
-# Quick plot
-ggplot() +
-  geom_point(current, mapping = aes(x = es,
-                                    y = trait,
-                                    color = trait),
-                                    #shape = interaction),
-             size = 2, alpha = 0.5, position = "jitter") +
-  #geom_errorbar(current, mapping = aes(xmin = (es - es.se),
-  #                                     xmax = (es + es.se),
-  #                                     y    = type),
-  #              width = 0.1) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Effect size (d)",
-       y = "Trait",
-       color = "Trait") +
-  #scale_color_manual(values = c("blue"),
-  #                   labels = c("Competition")) +
-  scale_x_continuous(limits = c(-2, 2)) +
+# Effect sizes by first organism
+ggplot(filter(es, abs(es) < 6),
+       mapping = aes(x = es,
+                     y = interaction,
+                     color = organism.first)) +
+  scale_color_manual(values = c("mediumslateblue", "black", "darkseagreen3")) +
+  geom_vline(xintercept = 0,
+             linetype = "dashed") +
+  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
+                  position = position_jitter(width = 0.5),
+                  linetype = "solid",
+                  size = 0.2) +
+  labs(y = "Interaction", x = "Effect size (Cohen's D)",
+       color = "Organism (focal)") +
   pretty
-```
 
-### Notes
+# Effect sizes by second organism
+ggplot(filter(es, abs(es) < 6),
+       mapping = aes(x = es,
+                     y = interaction,
+                     color = organism.second)) +
+  scale_color_manual(values = c("dodgerblue", "gold3", "mediumslateblue", "black", "darkseagreen3")) +
+  geom_vline(xintercept = 0,
+             linetype = "dashed") +
+  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
+                  position = position_jitter(width = 0.5),
+                  linetype = "solid",
+                  size = 0.2) +
+  labs(y = "Interaction", x = "Effect size (Cohen's D)",
+       color = "Organism (interacting)") +
+  pretty
 
-```{r, echo = `FALSE`}
-# ES 1_1
-es <- ma.es(yes, es, 1,
-            data.frame(comment       = "Table 6",
-                       es.id         = "1_1",
-                       focal.species = "Rana utricularia",
-                       focal.n       = 275,
-                       focal.density = NA,
-                       focal.size    = NA,
-                       mut.species   = NA,
-                       mut.n         = NA,
-                       mut.density   = NA,
-                       mut.size      = NA,
-                       comp.species  = "Several",
-                       comp.n        = "Many",
-                       comp.density  = NA,
-                       comp.size     = NA,
-                       pred.species  = "Notophthalmus viridescens dorsalis",
-                       pred.n        = 2,
-                       pred.density  = NA,
-                       pred.size     = NA,
-                       interaction   = "Predation and competition",
-                       trait         = "Survivorship",
-                       treatment     = NA,
-                       location      = "Duke Zoology Field Station, Durham, NC",
-                       measure       = "Mean",
-                       direction     = "-",
-                       n.c           = 2,
-                       mean.c        = 0.17,
-                       error.c       = 0.04,
-                       error.type.c  = "sd",
-                       n.e           = 5,
-                       mean.e        = 0.24,
-                       error.e       = 0.14,
-                       error.type.e  = "sd"))
+# Effect sizes by organism
+ggplot(filter(es, abs(es) < 6),
+       mapping = aes(x = es,
+                     y = organism.first,
+                     color = interaction)) +
+  scale_color_manual(values = c("dodgerblue", "gold3", "mediumslateblue", "black", "darkseagreen3")) +
+  geom_vline(xintercept = 0,
+             linetype = "dashed") +
+  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
+                  position = position_jitter(width = 0.5),
+                  linetype = "solid",
+                  size = 0.2) +
+  labs(y = "Organism (focal)", x = "Effect size (Cohen's D)",
+       color = "Interaction") +
+  pretty
 
 
-```
+## Do something
+#res <- rma.uni(es, es.var, dat = es) 
+#class(res)
+#
+## Forest plot?
+#forest_plot <- forest(res)
+#
+## Manual plot?
+#plot(working.es$es)
 
-```{r, echo = `FALSE`}
-# ES 1_1
-es <- ma.es(yes, es, 1,
-            data.frame(comment       = "Table 6",
-                       es.id         = "1_1",
-                       focal.species = "Rana utricularia",
-                       focal.n       = 275,
-                       focal.density = NA,
-                       focal.size    = NA,
-                       mut.species   = NA,
-                       mut.n         = NA,
-                       mut.density   = NA,
-                       mut.size      = NA,
-                       comp.species  = "Several",
-                       comp.n        = "Many",
-                       comp.density  = NA,
-                       comp.size     = NA,
-                       pred.species  = "Notophthalmus viridescens dorsalis",
-                       pred.n        = 2,
-                       pred.density  = NA,
-                       pred.size     = NA,
-                       interaction   = "Predation and competition",
-                       trait         = "Survivorship",
-                       treatment     = NA,
-                       location      = "Duke Zoology Field Station, Durham, NC",
-                       measure       = "Mean",
-                       direction     = "-",
-                       n.c           = 2,
-                       mean.c        = 0.17,
-                       error.c       = 0.04,
-                       error.type.c  = "sd",
-                       n.e           = 5,
-                       mean.e        = 0.24,
-                       error.e       = 0.14,
-                       error.type.e  = "sd"))
+# Bad plot
+#ggplot(filter(es, abs(es) < 6),
+#       mapping = aes(x = es,
+#                     y = interaction,
+#                     color = interaction)) +
+#    geom_point(size     = 1,
+#               position = position_dodge(width = 0.5)) +
+#    geom_errorbar(
+#        aes(xmin = es - es.var,
+#            xmax = es + es.var),
+#        width    = 0.05,
+#        linetype = "solid",
+#        position = position_dodge(width = 0.5)) +
+#    geom_vline(mapping = aes(xintercept = 0),
+#               linetype = "solid",
+#               color = "black")
 
-
-
-
-
-# ES 17_2
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6",
-                            es.id         = "1_2",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.17,
-                            error.c       = 0.04,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.16,
-                            error.e       = 0.11,
-                            error.type.e  = "sd"))
-
-# ES 17_3
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, % metamorph",
-                            es.id         = "1_3",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 0.10,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.20,
-                            error.e       = 0.45,
-                            error.type.e  = "sd"))
-
-# ES 17_4
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, % metamorph",
-                            es.id         = "1_4",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 0.10,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 0.22,
-                            error.e       = 0.43,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_5
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, % metamorph",
-                            es.id         = "1_5",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density  = NA,
-                            focal.size     = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 916.3,
-                            error.c       = 116.0,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 1329.0,
-                            error.e       = 376.2,
-                            error.type.e  = "sd"))
-
-# ES 17_6
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, % metamorph",
-                            es.id         = "1_6",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 916.3,
-                            error.c       = 116.0,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 880.3,
-                            error.e       = 321.7,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_7
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, larval period",
-                            es.id         = "1_7",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 151.2,
-                            error.c       = 5.9,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 136.0,
-                            error.e       = 4.8,
-                            error.type.e  = "sd"))
-
-# ES 17_8
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, larval period",
-                            es.id         = "1_8",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 4,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 151.2,
-                            error.c       = 5.9,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 96.7,
-                            error.e       = 21.2,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_9
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, growth rate",
-                            es.id         = "1_9",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 6.1,
-                            error.c       = 0.5,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 10.9,
-                            error.e       = 6.6,
-                            error.type.e  = "sd"))
-
-# ES 17_10
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, growth rate",
-                            es.id         = "1_10",
-                            focal.species = "Rana utricularia",
-                            focal.n       = 275,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 4,
-                            mean.c        = 6.1,
-                            error.c       = 0.5,
-                            error.type.c  = "sd",
-                            n.e           = 5,
-                            mean.e        = 9.0,
-                            error.e       = 1.4,
-                            error.type.e  = "sd"))
-
-##############################################################################
-
-# ES 17_11
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, growth rate",
-                            es.id         = "1_11",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Survivorship",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 0.16,
-                            error.c       = 0.11,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 0.08,
-                            error.e       = 0.11,
-                            error.type.e  = "sd"))
-
-# ES 17_12
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, mass at meta",
-                            es.id         = "1_12",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Biomass",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 152.1,
-                            error.c       = 24.4,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 163.3,
-                            error.e       = 7.8,
-                            error.type.e  = "sd"))
-
-# ES 17_13
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, larval period",
-                            es.id         = "1_13",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Development",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "-",
-                            n.c           = 2,
-                            mean.c        = 40.6,
-                            error.c       = 0.9,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 39.3,
-                            error.e       = 0.5,
-                            error.type.e  = "sd"))
-
-# ES 17_14
-es <- ma.es(wos, es, 1,
-                 data.frame(comment       = "Table 6, larval period",
-                            es.id         = "1_14",
-                            focal.species = "Bufo americanus",
-                            focal.n       = 25,
-                            focal.density = NA,
-                            focal.size    = NA,
-                            comp.species  = "Several",
-                            comp.n        = "Many",
-                            comp.density  = NA,
-                            comp.size     = NA,
-                            pred.species  = "Notophthalmus viridescens dorsalis",
-                            pred.n        = 2,
-                            pred.density  = NA,
-                            pred.size     = NA,
-                            interaction   = "Predation and competition",
-                            trait         = "Growth rate",
-                            location      = "Duke Zoology Field Station, Durham, NC",
-                            measure       = "Mean",
-                            direction     = "+",
-                            n.c           = 2,
-                            mean.c        = 3.7,
-                            error.c       = 0.6,
-                            error.type.c  = "sd",
-                            n.e           = 2,
-                            mean.e        = 4.1,
-                            error.e       = 0.2,
-                            error.type.e  = "sd"))
 ```
 
