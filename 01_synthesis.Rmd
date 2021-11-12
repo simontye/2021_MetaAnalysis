@@ -22,6 +22,7 @@ library(esc)
 library(gdata)
 library(searcher)
 library(metaDigitise)
+library(rnoaa)
 #library(dmetar)
 
 # Reset global environment
@@ -164,6 +165,12 @@ ma.abstract <- function(wos, article.id) {
   # Choose output
   return(article)
 }
+
+
+# Functions for statistics
+get.se   <- function(x) sd(x) / sqrt(length((x)))
+get.mean <- function(x) mean(x, na.rm = TRUE)
+get.sum  <- function(x) sum(x, na.rm = TRUE)
 
 # Plot theme
 pretty <- theme_classic(base_size = 10) +
@@ -1020,131 +1027,6 @@ wos.yes <- wos %>%
   filter(include == "yes" | include == "prob yes")
 ```
 
-```{r, echo = `FALSE`}
-###########################################
-# Schadler2010
-# Extract
-# Fig. 1
-
-###########################################
-# Vogt2010
-# Extract
-# Fig3a, Fig3b
-# Log ratio response and raw response, have raw response in Fig3 extracted
-
-###########################################
-# Grey2011
-# Extract
-# Fig5, maybe pop growth rates, con + hetero or none though
-
-###########################################
-# Santos2012
-# Extracted Fig2a, Fig2b
-
-###########################################
-# Marino2013
-# Extracted Fig2a, Fig2b
-
-###########################################
-# Nilsson2014
-# Check about transformations, weird stats presented
-
-###########################################
-# Shah2014
-# Check about transformations for Relative Interaction Intensity for Figs 1 and 2
-
-###########################################
-# Bontrager2014
-# Extracted fig 1 and 5, think about including time series
-
-###########################################
-# Martinez2015
-# Extract figure 2
-
-###########################################
-# Kenison2016
-# Extract figure 2, think about time series
-
-###########################################
-# Parepa2016
-# Missing stats, just model, it seems
-
-###########################################
-# Suraci2017
-# Maybe fig 2
-
-###########################################
-# Nobbs2017
-# Can prob extract figs
-
-###########################################
-# Dong2018
-# Check, MA of CO2 with some AMF
-
-###########################################
-# Ramirez2018
-# Check, MA of AMF
-
-###########################################
-# Welk2019
-# Extract from fig 1 
-
-###########################################
-# Welk2019
-# Extract from fig 1 
-
-###########################################
-
-#wos.yes[17, c("title", "year", "authors", "id")]
-
-
-#
-#colnames(wos.yes)
-#str(es)
-#ma.es
-
-## Create empty df to store effect sizes
-#es <- data.frame(id            = as.character(NA),
-#                 year          = as.character(NA),
-#                 title         = as.character(NA),
-#                 authors       = as.character(NA),
-#                 journal       = as.character(NA),
-#                 book          = as.character(NA),
-#                 abstract      = as.character(NA),
-#                 include       = as.character(NA),
-#                 comment       = as.character(NA),
-#                 es.id         = as.character(NA),
-#                 focal.species = as.character(NA),
-#                 focal.n       = as.character(NA),
-#                 focal.density = as.character(NA),
-#                 focal.size    = as.character(NA),
-#                 mut.species   = as.character(NA),
-#                 mut.n         = as.character(NA),
-#                 mut.density   = as.character(NA),
-#                 mut.size      = as.character(NA),
-#                 comp.species  = as.character(NA), 
-#                 comp.n        = as.character(NA),
-#                 comp.density  = as.character(NA),
-#                 comp.size     = as.character(NA),
-#                 pred.species  = as.character(NA), 
-#                 pred.n        = as.character(NA),  
-#                 pred.density  = as.character(NA),
-#                 pred.size     = as.character(NA),
-#                 interaction   = as.character(NA),   
-#                 trait         = as.character(NA),         
-#                 treatment     = as.character(NA),
-#                 location      = as.character(NA),      
-#                 measure       = as.character(NA),       
-#                 direction     = as.character(NA),
-#                 es            = as.character(NA),
-#                 se            = as.character(NA),
-#                 var           = as.character(NA),
-#                 ci.lo         = as.character(NA),
-#                 ci.hi         = as.character(NA),
-#                 w             = as.character(NA))
-
-```
-
 ### Step 5: Extract data from figures
 
 ```{r, echo = FALSE}
@@ -1268,7 +1150,7 @@ fig.data <- fig.data %>%
 rm(filenames, fig.detail, i)
 ```
 
-# Bontrager 2014
+# Bontrager 2014 (field, done)
 
 ```{r, echo = `FALSE`}
 # Bontrager2014_Fig1.png
@@ -1523,7 +1405,7 @@ rm(fig.data.1, fig.data.2, fig.data.3,
    fig.data.4, fig.data.5)
 ```
 
-# Burkle 2015
+# Burkle 2015 (greenhouse, done)
 
 ```{r, echo = `FALSE`}
 # Burkle2015_Fig1a.png
@@ -1702,7 +1584,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1, fig.data.2, fig.data.3)
 ```
 
-# Cipriotti 2010
+# Cipriotti 2010 (field, done)
 
 ```{r, echo = `FALSE`}
 # Cipriotti2010_Fig1.png
@@ -1935,7 +1817,7 @@ rm(fig.data.1, fig.data.2, fig.data.3,
    fig.data.4)
 ```
 
-# Corli 2019
+# Corli 2019 (field, done)
 
 ```{r, echo = `FALSE`}
 # Corli2019_Fig3a.png
@@ -2033,7 +1915,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1, fig.data.2)
 ```
 
-# Grass 2018
+# Grass 2018 (greenhouse, done)
 
 ```{r, echo = `FALSE`}
 # Grass2018_Fig3a.png
@@ -2175,7 +2057,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1, fig.data.2, fig.data.3)
 ```
 
-# Gundale 2012
+# Gundale 2012 (field, done)
 
 ```{r, echo = `FALSE`}
 # Gundale2012_Fig2a.png
@@ -3142,7 +3024,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1, fig.data.2, fig.data.3)
 ```
 
-# Guo 2012
+# Guo 2012 (field, done)
 
 ```{r, echo = `FALSE`}
 # Guo2012_Fig3a_short.png
@@ -3196,7 +3078,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1)
 ```
 
-# Jackson 2016
+# Jackson 2016 (field, done)
 
 ```{r, echo = `FALSE`}
 # Jackson2016_Fig4.png
@@ -3251,7 +3133,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1)
 ```
 
-# Kennison 2016
+# Kenison 2016 (field, done)
 
 ```{r, echo = FALSE}
 # Kenison2016_Fig2a.png
@@ -3520,7 +3402,109 @@ rm(fig.data.1, fig.data.2, fig.data.3,
    fig.data.4, fig.data.5, fig.data.6)
 ```
 
-# Marino 2013
+# Leps 2018 (field, done)
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Marino 2013 (field, done)
 
 ```{r, echo = FALSE}
 # Marino2013_Fig1a.png
@@ -3615,7 +3599,7 @@ working.fig.data <- working.fig.data %>%
 rm(fig.data.1)
 ```
 
-# Martinez 2015
+# Martinez 2015 (field, done)
 
 ```{r, echo = FALSE}
 # Martinez2015_Fig2a.png
@@ -3798,9 +3782,7 @@ working.fig.data <- rbind(working.fig.data,
 
 # Remove objects
 rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
-```
 
-```{r, echo = FALSE}
 # Martinez2015_Fig2b.png
 fig.data.1 <- fig.data %>%
   filter(filename == "Martinez2015_Fig2b.png") %>%
@@ -3981,9 +3963,7 @@ working.fig.data <- rbind(working.fig.data,
 
 # Remove objects
 rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
-```
 
-```{r, echo = FALSE}
 # Martinez2015_Fig2c.png
 fig.data.1 <- fig.data %>%
   filter(filename == "Martinez2015_Fig2c.png") %>%
@@ -4166,7 +4146,776 @@ working.fig.data <- rbind(working.fig.data,
 rm(fig.data.1, fig.data.2, fig.data.3, fig.data.4)
 ```
 
-### Step 5: Figz
+### Step 6: Add local environmental data
+
+```{r, echo = `FALSE`}
+# Load climate metadata
+climate.meta <- isdparser::isd_metadata
+
+# Load study details
+localities <- read.csv(file = "data/localities/ma_localities.csv", header = TRUE, sep = ",")
+
+# Reformat localities
+localities <- localities %>%
+  filter(location_type == "field") %>%
+  tibble::rowid_to_column(., "id") %>%
+  dplyr::select(., c(id, study, experiment,
+                     lat, long, elev_ft,
+                     year_start, month_start, day_start,
+                     year_end, month_end, day_end)) %>%
+  # Convert elevation (ft; via Google Earth Pro) to meters
+  dplyr::rename(elev           = elev_ft,
+                year_start_exp = year_start,
+                year_end_exp   = year_end) %>%
+  dplyr::mutate(elev = as.numeric(elev) * 0.3048,
+                lat  = as.numeric(lat),
+                long = as.numeric(long))
+
+# Create empty df
+weather.stations <- data.frame()
+
+# Find nearest weather stations
+for(i in 1:max(localities$id)){
+  # Find nearest weather station within 100 km radius
+  tmp <- isd_stations_search(lat = localities$lat[i],
+                             lon = localities$long[i],
+                             radius = 100)
+  # Add identifier and retain closest weather station
+  tmp <- tmp %>%
+    mutate(id = i)
+  # Bind results
+  weather.stations <- rbind(tmp, weather.stations)
+  # Remove objects
+  rm(i, tmp)
+}
+
+# Find closest weather data that covers study period
+localities <- weather.stations %>%
+  separate(., col = c("begin"),
+           into = c("year_start_climate", "month_start_climate", "day_start_climate"),
+           sep = c(4, 6), remove = TRUE) %>%
+  separate(., col = c("end"),
+           into = c("year_end_climate", "month_end_climate", "day_end_climate"),
+           sep = c(4, 6), remove = TRUE) %>%
+  dplyr::select(., c("id", "usaf", "wban",
+                     "station_name", "distance",
+                     "ctry", "state", "icao",
+                     "lat", "lon", "elev_m",
+                     "year_start_climate", "year_end_climate")) %>%
+  dplyr::rename(country = ctry,
+                long    = lon,
+                elev    = elev_m) %>%
+  left_join(localities[c("id", "year_start_exp", "year_end_exp",
+                         "study", "experiment")], ., by = c("id")) %>%
+  filter(year_start_exp - 1 > year_start_climate) %>%
+  filter(year_end_exp + 1 < year_end_climate) %>%
+  group_by(id) %>%
+  filter(distance == min(distance))
+
+# Create empty df
+climate <- data.frame()
+
+# Retrieve climate data
+for(i in unique(localities$id)){
+  tryCatch({
+  # Save row
+  study.id <- i
+  # Isolate row
+  tmp <- localities %>%
+    filter(id == study.id) %>%
+    mutate(year_start_exp = as.numeric(year_start_exp),
+           year_end_exp   = as.numeric(year_end_exp))
+  }, error = function(e){})
+  # Acquire climate data for each year
+  for(j in (tmp$year_start_exp):(tmp$year_end_exp)){
+    tryCatch({
+      # Save year
+      climate.year <- j
+      # Isolate year
+      tmp2 <- isd(usaf = tmp$usaf,
+                  wban = tmp$wban,
+                  year = climate.year)
+      # Subset air and precipitation data
+      tmp2 <- tmp2 %>%
+        dplyr::select(., c("usaf_station", "wban_station",
+                           "temperature", "AA1_depth")) %>%
+        separate(., temperature, into = c("temperature_sign", "temperature"), sep = c(1)) %>%
+        mutate(temperature = as.numeric(temperature),
+               AA1_depth   = as.numeric(AA1_depth)) %>%
+        mutate(temperature = ifelse(temperature_sign == "+",
+                                    temperature,
+                                    temperature * -1)) %>%
+        dplyr::rename(usaf   = usaf_station,
+                      wban   = wban_station,
+                      precip = AA1_depth,
+                      temp   = temperature) %>%
+        filter(temp   != 9999) %>%
+        filter(precip != 9999) %>%
+        # Adjust for scaling factor
+        dplyr::mutate(temp             = temp / 10,
+                      precip           = precip / 10,
+                      temperature_sign = NULL) %>%
+        group_by(usaf, wban) %>%
+        dplyr::summarize_all(c(get.mean, get.se)) %>%
+        mutate(year_climate   = climate.year,
+               year_start_exp = tmp$year_start_exp,
+               year_end_exp   = tmp$year_end_exp)
+        # Rename columns
+        colnames(tmp2) = gsub("_fn1", ".mean", colnames(tmp2))
+        colnames(tmp2) = gsub("_fn2", ".se",   colnames(tmp2))
+        # Bind results
+        climate <- rbind(tmp2, climate)
+        }, error = function(e){})
+  }
+}
+
+# Add climate data to localities
+climate <- localities %>%
+  left_join(., climate,
+            by = c("usaf", "wban",
+                   "year_start_exp", "year_end_exp")) %>%
+  mutate(temp.se      = NULL,
+         precip.se    = NULL,
+         experiment   = NULL,
+         year_climate = NULL) %>%
+  group_by(id, year_start_exp, year_end_exp, study,
+           usaf, wban, station_name, distance,
+           country, state, icao, lat, long, elev,
+           year_start_climate, year_end_climate) %>%
+  dplyr::summarize_all(c(get.mean, get.se))
+
+# Rename columns
+colnames(climate) = gsub("_fn1", ".mean", colnames(climate))
+colnames(climate) = gsub("_fn2", ".se",   colnames(climate))
+
+# Add climate data to figure data
+fig.data <- fig.data %>%
+  separate(col = "filename",
+           into = c("study"),
+           remove = FALSE) %>%
+  left_join(., climate, by = c("study"))
+```
+
+
+
+
+
+
+
+# Petipas2014_Fig1.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Santos2012_Fig2a.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Schadler2010_Fig1.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Segre2013_Fig2a.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Vogt2010_Fig3a.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+# Welk2019_Fig1a.png
+
+```{r, echo = `FALSE`}
+# Leps2018_Fig1.png
+fig.data.1 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Forb" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Forb", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Forb", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Forb", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "forb",
+                   group.2 = "grass",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Leps2018_Fig1.png
+fig.data.2 <- fig.data %>%
+  filter(filename == "Leps2018_Fig1.png") %>%
+  filter(group.1 == "Grass" | group.1 == "Forb and grass") %>%
+  dplyr::rowwise() %>%
+  mutate(
+    ### Control
+    # n
+    n.c    = ifelse(group.1 == "Grass", n, NA),
+    # mean
+    mean.c = ifelse(group.1 == "Grass", mean, NA),
+    # sd
+    sd.c   = ifelse(group.1 == "Grass", sd, NA),
+    ### Experimental
+    # n
+    n.e    = ifelse(group.2 == "Forb and grass", n, 6),
+    # mean
+    mean.e = ifelse(group.2 == "Forb and grass", mean, NA),
+    # sd
+    sd.e   = ifelse(group.2 == "Forb and grass", sd, NA)) %>%
+  mutate(
+    # Remove old stats columns
+    mean       = NULL,
+    sd         = NULL,
+    n          = NULL,
+    r          = NULL,
+    se         = NULL,
+    error_type = NULL,
+    plot_type  = NULL) %>%
+  # Merge control and experimental rows
+  group_by(filename, variable, article.id) %>%
+  dplyr::summarize(n.c     = max(n.c, na.rm = TRUE),
+                   mean.c  = max(mean.c, na.rm = TRUE),
+                   sd.c    = max(sd.c, na.rm = TRUE),
+                   n.e     = max(n.e, na.rm = TRUE),
+                   mean.e  = max(mean.e, na.rm = TRUE),
+                   sd.e    = max(sd.e, na.rm = TRUE),
+                   group.1 = "grass",
+                   group.2 = "forb",
+                   group.3 = as.character(NA),
+                   group.4 = as.character(NA)) %>%
+  # Replace any missing values (Inf) with NAs
+  mutate_at(., vars (-group_cols()), function(x) ifelse(is.infinite(x), NA, x)) %>%
+  distinct(.)
+
+# Combine fig.data
+working.fig.data <- working.fig.data %>%
+  full_join(., fig.data.1) %>%
+  full_join(., fig.data.2)
+
+# Remove objects
+rm(fig.data.1, fig.data.2)
+```
+
+
+### Step 5: Figures
 
 ```{r, echo = `FALSE`}
 # Calculate effect sizes (yi = es, vi = variance)
@@ -4182,7 +4931,7 @@ es <- working.fig.data %>%
   dplyr::rename(es     = yi,
                 es.var = vi) %>%
   filter(!is.na(es))
-
+                 
 ###### Categorize studies
 
 # Plant
@@ -4269,44 +5018,28 @@ es <- es %>%
                                                                   pred.herp.fish)),
                                            "predation", NA))))
 
+# Calculate mean effect size by interaction
+es <- es %>%
+  group_by(interaction) %>%
+  dplyr::summarize(es     = mean(es),
+                   es.var = mean(es.var)) %>%
+  mutate(organism.first  = "all",
+         organism.second = "all") %>%
+  full_join(es, ., by = c("es", "es.var", "interaction",
+                          "organism.first", "organism.second"))
+
+# Calculate relative interaction intensity (RII)
+rii <- es %>%
+  group_by(interaction) %>%
+  dplyr::summarize(rii = abs(mean(mean.e, na.rm = TRUE) - mean(mean.c, na.rm = TRUE)) /
+                     (mean(mean.e, na.rm = TRUE) + mean(mean.c, na.rm = TRUE)))
+
 # Effect sizes by first organism
 ggplot(filter(es, abs(es) < 6),
        mapping = aes(x = es,
-                     y = interaction,
-                     color = organism.first)) +
-  scale_color_manual(values = c("mediumslateblue", "black", "darkseagreen3")) +
-  geom_vline(xintercept = 0,
-             linetype = "dashed") +
-  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
-                  position = position_jitter(width = 0.5),
-                  linetype = "solid",
-                  size = 0.2) +
-  labs(y = "Interaction", x = "Effect size (Cohen's D)",
-       color = "Organism (focal)") +
-  pretty
-
-# Effect sizes by second organism
-ggplot(filter(es, abs(es) < 6),
-       mapping = aes(x = es,
-                     y = interaction,
-                     color = organism.second)) +
-  scale_color_manual(values = c("dodgerblue", "gold3", "mediumslateblue", "black", "darkseagreen3")) +
-  geom_vline(xintercept = 0,
-             linetype = "dashed") +
-  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
-                  position = position_jitter(width = 0.5),
-                  linetype = "solid",
-                  size = 0.2) +
-  labs(y = "Interaction", x = "Effect size (Cohen's D)",
-       color = "Organism (interacting)") +
-  pretty
-
-# Effect sizes by organism
-ggplot(filter(es, abs(es) < 6),
-       mapping = aes(x = es,
                      y = organism.first,
-                     color = interaction)) +
-  scale_color_manual(values = c("dodgerblue", "gold3", "mediumslateblue", "black", "darkseagreen3")) +
+                     color = organism.first)) +
+  scale_color_manual(values = c("black", "mediumslateblue", "gold3", "darkseagreen3")) +
   geom_vline(xintercept = 0,
              linetype = "dashed") +
   geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
@@ -4314,9 +5047,46 @@ ggplot(filter(es, abs(es) < 6),
                   linetype = "solid",
                   size = 0.2) +
   labs(y = "Organism (focal)", x = "Effect size (Cohen's D)",
-       color = "Interaction") +
-  pretty
+       color = "Organism (focal)") +
+  pretty +
+  facet_wrap(~interaction, nrow = 3)
 
+
+## Effect sizes by second organism
+#ggplot(filter(es, abs(es) < 6),
+#       mapping = aes(x = es,
+#                     y = organism.second,
+#                     color = organism.second)) +
+#  scale_color_manual(values = c("black", "dodgerblue",
+#                                "tomato","mediumslateblue",
+#                                "gold3", "darkseagreen3")) +
+#  geom_vline(xintercept = 0,
+#             linetype = "dashed") +
+#  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
+#                  position = position_jitter(width = 0.5),
+#                  linetype = "solid",
+#                  size = 0.2) +
+#  labs(y = "Organism (interacting)", x = "Effect size (Cohen's D)",
+#       color = "Organism (interacting)") +
+#  pretty +
+#  facet_wrap(~interaction, nrow = 3)
+
+## Effect sizes by organism
+#ggplot(filter(es, abs(es) < 6),
+#       mapping = aes(x = es,
+#                     y = organism.first,
+#                     color = interaction)) +
+#  scale_color_manual(values = c("dodgerblue", "gold3", "mediumslateblue", "black", #"darkseagreen3")) +
+#  geom_vline(xintercept = 0,
+#             linetype = "dashed") +
+#  geom_pointrange(mapping = aes(xmin = es - es.var, xmax = es + es.var), 
+#                  position = position_jitter(width = 0.5),
+#                  linetype = "solid",
+#                  size = 0.2) +
+#  labs(y = "Organism (focal)", x = "Effect size (Cohen's D)",
+#       color = "Interaction") +
+#  pretty +
+#  facet_wrap(~organism.first, nrow = 4)
 
 ## Do something
 #res <- rma.uni(es, es.var, dat = es) 
@@ -4347,3 +5117,127 @@ ggplot(filter(es, abs(es) < 6),
 
 ```
 
+```{r, echo = `FALSE`}
+###########################################
+# Schadler2010
+# Extract
+# Fig. 1
+
+###########################################
+# Vogt2010
+# Extract
+# Fig3a, Fig3b
+# Log ratio response and raw response, have raw response in Fig3 extracted
+
+###########################################
+# Grey2011
+# Extract
+# Fig5, maybe pop growth rates, con + hetero or none though
+
+###########################################
+# Santos2012
+# Extracted Fig2a, Fig2b
+
+###########################################
+# Marino2013
+# Extracted Fig2a, Fig2b
+
+###########################################
+# Nilsson2014
+# Check about transformations, weird stats presented
+
+###########################################
+# Shah2014
+# Check about transformations for Relative Interaction Intensity for Figs 1 and 2
+
+###########################################
+# Bontrager2014
+# Extracted fig 1 and 5, think about including time series
+
+###########################################
+# Martinez2015
+# Extract figure 2
+
+###########################################
+# Kenison2016
+# Extract figure 2, think about time series
+
+###########################################
+# Parepa2016
+# Missing stats, just model, it seems
+
+###########################################
+# Suraci2017
+# Maybe fig 2
+
+###########################################
+# Nobbs2017
+# Can prob extract figs
+
+###########################################
+# Dong2018
+# Check, MA of CO2 with some AMF
+
+###########################################
+# Ramirez2018
+# Check, MA of AMF
+
+###########################################
+# Welk2019
+# Extract from fig 1 
+
+###########################################
+# Welk2019
+# Extract from fig 1 
+
+###########################################
+
+#wos.yes[17, c("title", "year", "authors", "id")]
+
+
+#
+#colnames(wos.yes)
+#str(es)
+#ma.es
+
+## Create empty df to store effect sizes
+#es <- data.frame(id            = as.character(NA),
+#                 year          = as.character(NA),
+#                 title         = as.character(NA),
+#                 authors       = as.character(NA),
+#                 journal       = as.character(NA),
+#                 book          = as.character(NA),
+#                 abstract      = as.character(NA),
+#                 include       = as.character(NA),
+#                 comment       = as.character(NA),
+#                 es.id         = as.character(NA),
+#                 focal.species = as.character(NA),
+#                 focal.n       = as.character(NA),
+#                 focal.density = as.character(NA),
+#                 focal.size    = as.character(NA),
+#                 mut.species   = as.character(NA),
+#                 mut.n         = as.character(NA),
+#                 mut.density   = as.character(NA),
+#                 mut.size      = as.character(NA),
+#                 comp.species  = as.character(NA), 
+#                 comp.n        = as.character(NA),
+#                 comp.density  = as.character(NA),
+#                 comp.size     = as.character(NA),
+#                 pred.species  = as.character(NA), 
+#                 pred.n        = as.character(NA),  
+#                 pred.density  = as.character(NA),
+#                 pred.size     = as.character(NA),
+#                 interaction   = as.character(NA),   
+#                 trait         = as.character(NA),         
+#                 treatment     = as.character(NA),
+#                 location      = as.character(NA),      
+#                 measure       = as.character(NA),       
+#                 direction     = as.character(NA),
+#                 es            = as.character(NA),
+#                 se            = as.character(NA),
+#                 var           = as.character(NA),
+#                 ci.lo         = as.character(NA),
+#                 ci.hi         = as.character(NA),
+#                 w             = as.character(NA))
+
+```
